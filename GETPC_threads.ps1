@@ -6,7 +6,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 $PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[psobject])
 $findPC = {
-    #$stopWatchInner = [System.Diagnostics.Stopwatch]::StartNew()
+    $save = $true
     $pc = $_.pcName.ToLower()
     $continue = $false
     if ($pc.StartsWith("kar") -and ($pc.length -eq 13)) { $continue = $true }
@@ -29,9 +29,7 @@ $findPC = {
     else {}
     if ($continue) {
         $url = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc + "&take=10&skip=0&type=0&targetActive=1"
-        #$stopWatchInner.Restart()
         $Responce = Invoke-WebRequest -Uri $url -UseDefaultCredentials -AllowUnencryptedAuthentication -SessionVariable 'Session'
-        #Write-Host "Web request: "$stopWatchInner.Elapsed.TotalMilliseconds
         if (!($Responce.Content | ConvertFrom-Json).result) {}
         elseif (($Responce.Content | ConvertFrom-Json).result) {
             $pcName = (($Responce.Content | ConvertFrom-Json).result).Name
@@ -41,9 +39,7 @@ $findPC = {
                 ComputerName = $pcName.ToString()
                 Id = "88eeae01-fc85-426c-898d-dae73ec31867"
             } | ConvertTo-Json -Compress
-            #$stopWatchInner.Restart()
             $macResponce = Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/Tool/Run" -Body $requestBody -WebSession $Session -ContentType "application/json" -AllowUnencryptedAuthentication
-            #Write-Host "MAC web request: "$stopWatchInner.Elapsed.TotalMilliseconds
             $macResponce = ($macResponce | ConvertFrom-Json).result
             #MAC
             foreach ($result in $macResponce) {
@@ -52,7 +48,6 @@ $findPC = {
                     $mac = $macColon -replace ":",""
                 }
             }
-            #test
             #Modellmagi below
             $model = ((($Responce.Content | ConvertFrom-Json).result).hardwareModel).Name
             foreach ($pc_model in $using:pc_modelsList) {
@@ -73,9 +68,7 @@ $findPC = {
                     }
             $id = (($Responce.Content | ConvertFrom-Json).result).Id
             $request = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $id
-            #$stopWatchInner.Restart()
             $Responce = (Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json
-            #Write-Host "Web request 2: "$stopWatchInner.Elapsed.TotalMilliseconds
             #Serienummer
             $serial = $Responce.serial
             #OS
@@ -86,11 +79,9 @@ $findPC = {
                 $os = "W10"  
             }
             else {
-                #$os = ""
-                #Break?  
+                $save = $false
             }
             #Här händer magin för roller
-            #$stopWatchInner.Restart()
             $bit = $Responce.processorArchitecture
             $names = $Responce.collections
             $filteredName = "Inte hittad"
@@ -117,38 +108,38 @@ $findPC = {
             if (($filteredName -eq "1") -and ($bit -like "*64*")) {
                 $filteredName = "2"
             }
-            if ($filteredName -eq "Inte hittad") { $filteredName = "0" }
-            #Write-Host "PC Role Logic: "$stopWatchInner.Elapsed.TotalMilliseconds
+            if ($filteredName -eq "Inte hittad") {
+                $save = $false
+            }
             #Funktionskonto
-            #$stopWatchInner.Restart()
             $adVarde = C:\Users\gaisysd8bp\Desktop\NewScript\fkarfinder.ps1 $pcName
             if ($null -ne $adVarde.cn) { $adVarde = ($adVarde.cn -join ', ') }
             else {
                 $adVarde = "EJ ANGIVEN"
             }
-            #Write-Host "Funktionskonto: "$stopWatchInner.Elapsed.TotalMilliseconds
-            #$stopWatchInner.Restart()
             $lokaladmin = C:\Users\gaisysd8bp\Desktop\NewScript\localadmin.ps1 $pcName
             if ($localadmin) {
                 $lokaladmin = "JA"
             }
             else {
                 $lokaladmin = "NEJ"
-            }
-            #Write-Host "Lokal Admin: "$stopWatchInner.Elapsed.TotalMilliseconds
-            $pcObject = New-Object -TypeName PSObject 
+            }#Testa att skiten funkar
+            if ($save) {
+                $pcObject = New-Object -TypeName PSObject 
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvara_G -Value $hardware
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Operativsystem_G -Value $os
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Modell_G -Value $model
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Roll_G -Value $filteredName
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvarunamn_G -Value $pcName
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC-Adress_G -Value $mac
+            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_Adress_G -Value $mac
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_med_Kolon_G -Value $macColon
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Serienummer_G -Value $serial
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Funktionskonto_G -Value $adVarde
             Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Lokal_admin_G -Value $lokaladmin
             $tempQueue = $using:PCObjects
             $tempQueue.Enqueue($pcObject)
+            }
+            Remove-Variable -Name "save"
             Remove-Variable -Name "PCObject"
             Remove-Variable -Name "hardware"
             Remove-Variable -Name "tempQueue"
