@@ -45,7 +45,7 @@ $findPC = {
             foreach ($result in $macResponce) {
                 if ((($result -like "*Ethernet*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*") -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
                     $macColon = $result.Substring(0,17)
-                    $mac = $macColon -replace ":",""
+                    $mac = [string]($macColon -replace ":","")
                 }
             }
             #Modellmagi below
