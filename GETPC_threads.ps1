@@ -4,11 +4,10 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     Start-Process powershell -Verb runAs -ArgumentList $arguments
     break
 }
-$excludedModels = @("Virtual Machine","VMware Virtual Platform","Parallels Virtual Platform","OEM")
-$excludedModelsRegex = [string]::Join('|',$excludedModels)
+#$excludedModels = @("Virtual Machine","VMware Virtual Platform","Parallels Virtual Platform","OEM")
+#$excludedModelsRegex = [string]::Join('|',$excludedModels)
 $PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[psobject])
 $findPC = {
-    $save = $true
     $pc = $_.pcName.ToLower()
     $continue = $false
     if ($pc.StartsWith("kar") -and ($pc.length -eq 13)) { $continue = $true }
@@ -34,6 +33,7 @@ $findPC = {
         $Responce = Invoke-WebRequest -Uri $url -UseDefaultCredentials -AllowUnencryptedAuthentication -SessionVariable 'Session'
         if (!($Responce.Content | ConvertFrom-Json).result) {}
         elseif (($Responce.Content | ConvertFrom-Json).result) {
+            $save = $true
             $pcName = (($Responce.Content | ConvertFrom-Json).result).Name
             $requestBody =
             @{
@@ -67,9 +67,16 @@ $findPC = {
                         $model = "90"
                     }
                 }
-                elseif ($pc_model -match $excludedModelsRegex) {
-                    $save = $false
-                }
+            }
+            <#
+            if ($model -match $excludedModelsRegex) {
+                #$save = $false
+                #$model = "match"
+            }
+            #>
+            if ($model -match "\D") {
+                $save = $false
+                #Make this log
             }
             $id = (($Responce.Content | ConvertFrom-Json).result).Id
             $request = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $id
@@ -123,26 +130,26 @@ $findPC = {
                 $adVarde = "EJ ANGIVEN"
             }
             $lokaladmin = C:\Users\gaisysd8bp\Desktop\NewScript\localadmin.ps1 $pcName
-            if ($localadmin) {
+            if ($lokaladmin) {
                 $lokaladmin = "JA"
             }
             else {
                 $lokaladmin = "NEJ"
-            }#Testa att skiten funkar
+            }
             if ($save) {
                 $pcObject = New-Object -TypeName PSObject 
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvara_G -Value $hardware
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Operativsystem_G -Value $os
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Modell_G -Value $model
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Roll_G -Value $filteredName
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvarunamn_G -Value $pcName
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_Adress_G -Value $mac
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_med_Kolon_G -Value $macColon
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Serienummer_G -Value $serial
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Funktionskonto_G -Value $adVarde
-            Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Lokal_admin_G -Value $lokaladmin
-            $tempQueue = $using:PCObjects
-            $tempQueue.Enqueue($pcObject)
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvara_G -Value $hardware
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Operativsystem_G -Value $os
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Modell_G -Value $model
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Roll_G -Value $filteredName
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvarunamn_G -Value $pcName
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_Adress_G -Value $mac
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_med_Kolon_G -Value $macColon
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Serienummer_G -Value $serial
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Funktionskonto_G -Value $adVarde
+                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Lokal_admin_G -Value $lokaladmin
+                $tempQueue = $using:PCObjects
+                $tempQueue.Enqueue($pcObject)
             }
             Remove-Variable -Name "save"
             Remove-Variable -Name "PCObject"
