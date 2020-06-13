@@ -51,6 +51,8 @@ id;hv_typ;hv_kategori
 53;Venue 8 Pro 5830;7
 54;OR-PC19;39
 55;OR-PC21;39
+55;OR-PC21-12;39
+56;OR-PC24-12;39
 56;OR-PC24;39
 54;OR-PC19-12;39
 66;ThinkCentre M710t;12
@@ -71,7 +73,7 @@ id;hv_typ;hv_kategori
 81;ThinkPad W541;24
 82;ThinkStation P330;14
 84;Thinkstation P520;14
-84;Thinkstation P520c Tower;14
+84;Thinkstation P520c;14
 85;ThinkPad P53;22
 86;Lenovo TIO ThinkCenter M715q;4
 87;ThinkPad X395;18

@@ -4,6 +4,8 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     Start-Process powershell -Verb runAs -ArgumentList $arguments
     break
 }
+$excludedModels = @("Virtual Machine","VMware Virtual Platform","Parallels Virtual Platform","OEM")
+$excludedModelsRegex = [string]::Join('|',$excludedModels)
 $PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[psobject])
 $findPC = {
     $save = $true
@@ -45,7 +47,7 @@ $findPC = {
             foreach ($result in $macResponce) {
                 if ((($result -like "*Ethernet*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*") -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
                     $macColon = $result.Substring(0,17)
-                    $mac = [string]($macColon -replace ":","")
+                    [string]$mac = [string]($macColon -replace ":","")
                 }
             }
             #Modellmagi below
@@ -60,12 +62,15 @@ $findPC = {
                                         $hardware = "6"
                                     }
                                 }
-                            }
-                            if ($hardware -eq "6" -and $model -eq "91") {
-                                $model = "90"
-                            }
                         }
+                    if ($hardware -eq "6" -and $model -eq "91") {
+                        $model = "90"
                     }
+                }
+                elseif ($pc_model -match $excludedModelsRegex) {
+                    $save = $false
+                }
+            }
             $id = (($Responce.Content | ConvertFrom-Json).result).Id
             $request = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $id
             $Responce = (Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json
