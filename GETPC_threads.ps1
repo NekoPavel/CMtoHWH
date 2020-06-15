@@ -46,9 +46,12 @@ $findPC = {
             #MAC
             foreach ($result in $macResponce) {
                 if ((($result -like "*Ethernet*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*") -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
-                    $macColon = $result.Substring(0,17)
-                    [string]$mac = [string]($macColon -replace ":","")
+                    [string]$macColon = [string]$result.Substring(0,17)
+                    [string]$mac = [string]([string]$macColon -replace ":","")
                 }
+            }
+            if (!$mac -or !$macColon) {
+                $save = $false
             }
             #Modellmagi below
             $model = ((($Responce.Content | ConvertFrom-Json).result).hardwareModel).Name
@@ -74,7 +77,7 @@ $findPC = {
                 #$model = "match"
             }
             #>
-            if ($model -match "\D") {
+            if ($model -match "\D" -or !$model) {
                 $save = $false
                 #Make this log
             }
@@ -82,7 +85,10 @@ $findPC = {
             $request = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $id
             $Responce = (Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json
             #Serienummer
-            $serial = $Responce.serial
+            [string]$serial = [string]$Responce.serial
+            if ($serial -like "*O.E.M.*") {
+                $save = $false
+            }
             #OS
             if ($Responce.operatingSystem -like "*7*") {
                 $os = "W7"   
