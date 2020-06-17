@@ -6,7 +6,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 #$excludedModels = @("Virtual Machine","VMware Virtual Platform","Parallels Virtual Platform","OEM")
 #$excludedModelsRegex = [string]::Join('|',$excludedModels)
-$PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[psobject])
+$PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[PSCustomObject])
 $findPC = {
     $pc = $_.pcName.ToLower()
     $continue = $false
@@ -143,6 +143,7 @@ $findPC = {
                 $lokaladmin = "NEJ"
             }
             if ($save) {
+                <#
                 $pcObject = New-Object -TypeName PSObject 
                 Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvara_G -Value $hardware
                 Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Operativsystem_G -Value $os
@@ -154,8 +155,21 @@ $findPC = {
                 Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Serienummer_G -Value $serial
                 Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Funktionskonto_G -Value $adVarde
                 Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Lokal_admin_G -Value $lokaladmin
+                #>
                 $tempQueue = $using:PCObjects
-                $tempQueue.Enqueue($pcObject)
+                $tempQueue.Enqueue(<#$pcObject#>[PSCustomObject]@{
+                    Hardvara_G = $hardware
+                    Operativsystem_G = $os
+                    Modell_G = $model
+                    Roll_G = $filteredName
+                    Hardvarunamn_G = $pcName
+                    MAC_Adress_G = $mac
+                    MAC_med_Kolon_G = $macColon
+                    Serienummer_G = $serial
+                    Funktionskonto_G = $adVarde
+                    Lokal_admin_G = $lokaladmin
+                })
+
             }
             Remove-Variable -Name "save"
             Remove-Variable -Name "PCObject"
@@ -197,7 +211,7 @@ $pcList = Import-Csv -Delimiter "," -Path $pathToCsv -Header 'pcName' -Encoding 
 #Write-Host "List import" $stopWatchOuter.Elapsed.TotalMilliseconds
 
 
-$job = $pcList | ForEach-Object -AsJob -ThrottleLimit 48 <#-Begin {$script:running = $true} -End {$script:running = $false}#> -Parallel $findPC 
+$job = $pcList | ForEach-Object -AsJob -ThrottleLimit 48 -Parallel $findPC 
  
 while ($job.State -eq "Running"  -or $PCObjects.Count -gt 0) {
     if ($PcObjects.Count -gt 0) {
