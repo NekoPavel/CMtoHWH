@@ -1,4 +1,4 @@
-﻿
+﻿param([parameter(Mandatory=$true)][string]$pathToCsv,[parameter(Mandatory=$true)][string]$filename)
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")){
     $arguments = "& '" + $myinvocation.mycommand.definition + "'"
     Start-Process powershell -Verb runAs -ArgumentList $arguments
@@ -197,8 +197,8 @@ $findPC = {
         } 
     } 
 }
-$pathToCsv = Read-Host "Enter full csv file path to go thru (Without quotation marks)"
-$filename = Read-Host "FILNAMN?"
+#$pathToCsv = Read-Host "Enter full csv file path to go thru (Without quotation marks)"
+#$filename = Read-Host "FILNAMN?"
 Write-Host "Din fil kommer att sparas i" $PSScriptRoot "med namnet" $filename".csv"
 $stopWatchTotal = [System.Diagnostics.Stopwatch]::StartNew()
 #$stopWatchOuter = [System.Diagnostics.Stopwatch]::StartNew()
@@ -213,7 +213,7 @@ $pcList = Import-Csv -Delimiter "," -Path $pathToCsv -Header 'pcName' -Encoding 
 
 $job = $pcList | ForEach-Object -AsJob -ThrottleLimit 48 -Parallel $findPC 
  
-while ($job.State -eq "Running"  -or $PCObjects.Count -gt 0) {
+while ($job.State -eq "Running" -or $PCObjects.Count -gt 0) {
     if ($PcObjects.Count -gt 0) {
         $tempObj = New-Object -TypeName PSObject
         if ($PcObjects.TryDequeue([ref]$tempObj)) {
@@ -227,6 +227,7 @@ while ($job.State -eq "Running"  -or $PCObjects.Count -gt 0) {
 #foreach ($object in $PCObjects.ToArray()) { $object | Export-Csv -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8 }
 #Write-Host "File saving:" $stopWatchOuter.Elapsed.TotalMilliseconds
 Write-Host "Total:" $stopWatchTotal.Elapsed.TotalMinutes
-Get-Job | Stop-Job
-Get-Job | Remove-Job
+Write-Host "Done"
+#Get-Job | Stop-Job
+#Get-Job | Remove-Job
 #  C:\Users\gaisysd8bp\Desktop\NewScript\test.csv
