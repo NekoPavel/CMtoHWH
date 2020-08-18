@@ -205,14 +205,13 @@ $stopWatchTotal = [System.Diagnostics.Stopwatch]::StartNew()
 $pc_modelsList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\all_pc_models.csv -Header 'id','hv_typ','hv_category'
 $rolesList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\roles.csv -Header 'id','role'
 $aioList = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_touch_aio.csv -Header 'name'
-$pcList = Import-Csv -Delimiter "," -Path $pathToCsv -Header 'pcName' -Encoding UTF8
+$pcList = Import-Csv -Delimiter ";" -Path $pathToCsv -Header 'pcName' -Encoding UTF8
 #$running = $false
 
 #Write-Host "List import" $stopWatchOuter.Elapsed.TotalMilliseconds
 
 
 $job = $pcList | ForEach-Object -AsJob -ThrottleLimit 48 -Parallel $findPC 
- 
 while ($job.State -eq "Running" -or $PCObjects.Count -gt 0) {
     if ($PcObjects.Count -gt 0) {
         $tempObj = New-Object -TypeName PSObject
