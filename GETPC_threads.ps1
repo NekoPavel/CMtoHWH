@@ -133,7 +133,7 @@ $findPC = {
             $adVarde = C:\Users\gaisysd8bp\Desktop\NewScript\fkarfinder.ps1 $pcName
             if ($null -ne $adVarde.cn) { $adVarde = ($adVarde.cn -join ', ') }
             else {
-                $adVarde = "EJ ANGIVEN"
+                $adVarde = "N/A"
             }
             $lokaladmin = C:\Users\gaisysd8bp\Desktop\NewScript\localadmin.ps1 $pcName
             if ($lokaladmin) {
