@@ -45,7 +45,7 @@ $findPC = {
             $macResponce = ($macResponce | ConvertFrom-Json).result
             #MAC
             foreach ($result in $macResponce) {
-                if ((($result -like "*Ethernet*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*") -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
+                if ((($result -like "*Ethernet*") -and !($result -like "*Server Adapter*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*")  -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
                     [string]$macColon = [string]$result.Substring(0,17)
                     [string]$mac = [string]([string]$macColon -replace ":","")
                 }
