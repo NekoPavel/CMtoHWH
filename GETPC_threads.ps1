@@ -53,8 +53,19 @@ $findPC = {
             if (!$mac -or !$macColon) {
                 $save = $false
             }
-            #Modellmagi below
+            #Modell
             $model = ((($Responce.Content | ConvertFrom-Json).result).hardwareModel).Name
+            
+            $id = (($Responce.Content | ConvertFrom-Json).result).Id
+            $request = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $id
+            $Responce = (Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json
+            #Serienummer
+            [string]$serial = [string]$Responce.serial
+            if ($serial -like "*O.E.M.*") {
+                $save = $false
+            }
+
+            #Mer modellsaker
             foreach ($pc_model in $using:pc_modelsList) {
                 if ($pc_model.hv_typ -eq $model) {
                     $model = $pc_model.Id
@@ -69,6 +80,15 @@ $findPC = {
                     if ($hardware -eq "6" -and $model -eq "91") {
                         $model = "90"
                     }
+                    if ($model -eq "69") {
+                        #Om datorn INTE finns i listan så är det en av de nya
+                        foreach ($aioSerial in $using:aioSerialList) {
+                            if (!($aioSerial -eq $serial)) {
+                                $model = "106"
+                            }
+                        }
+                        #
+                    }
                 }
             }
             <#
@@ -81,14 +101,7 @@ $findPC = {
                 $save = $false
                 #Make this log
             }
-            $id = (($Responce.Content | ConvertFrom-Json).result).Id
-            $request = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $id
-            $Responce = (Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json
-            #Serienummer
-            [string]$serial = [string]$Responce.serial
-            if ($serial -like "*O.E.M.*") {
-                $save = $false
-            }
+
             #OS
             if ($Responce.operatingSystem -like "*7*") {
                 $os = "W7"   
@@ -205,6 +218,7 @@ $stopWatchTotal = [System.Diagnostics.Stopwatch]::StartNew()
 $pc_modelsList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\all_pc_models.csv -Header 'id','hv_typ','hv_category'
 $rolesList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\roles.csv -Header 'id','role'
 $aioList = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_touch_aio.csv -Header 'name'
+$aioSerialList = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M725s.csv -Header 'serial'
 $pcList = Import-Csv -Delimiter ";" -Path $pathToCsv -Header 'pcName' -Encoding UTF8
 #$running = $false
 
