@@ -45,7 +45,7 @@ $findPC = {
             $macResponce = ($macResponce | ConvertFrom-Json).result
             #MAC
             foreach ($result in $macResponce) {
-                if ((($result -like "*Ethernet*") -and !($result -like "*Server Adapter*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*")  -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
+                if ((($result -like "*Ethernet*") -and !($result -like "*Virtual*") -and !($result -like "*Server Adapter*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*")  -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
                     [string]$macColon = [string]$result.Substring(0,17)
                     [string]$mac = [string]([string]$macColon -replace ":","")
                 }
@@ -143,12 +143,12 @@ $findPC = {
                 $save = $false
             }
             #Funktionskonto
-            $adVarde = C:\Users\gaisysd8bp\Desktop\NewScript\fkarfinder.ps1 $pcName
+            $adVarde = &$PSScriptRoot\fkarfinder.ps1 $pcName
             if ($null -ne $adVarde.cn) { $adVarde = ($adVarde.cn -join ', ') }
             else {
                 $adVarde = "N/A"
             }
-            $lokaladmin = C:\Users\gaisysd8bp\Desktop\NewScript\localadmin.ps1 $pcName
+            $lokaladmin = &$PSScriptRoot\localadmin.ps1 $pcName
             if ($lokaladmin) {
                 $lokaladmin = "JA"
             }
