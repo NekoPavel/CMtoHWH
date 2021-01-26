@@ -1,8 +1,37 @@
-If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {  
-    $arguments = "& '" + $myinvocation.mycommand.definition + "'"
-    Start-Process powershell -Verb runAs -ArgumentList $arguments
+Param(
+    [string]$Loc
+)
+
+$Delay = 0
+
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+        [Security.Principal.WindowsBuiltInRole] 'Administrator')
+)
+{
+    Write-Host "Not elevated, restarting in $Delay seconds ..."
+    $Loc = Get-Location
+    Start-Sleep -Seconds $Delay
+
+    $Arguments =  @(
+        '-NoProfile',
+        '-ExecutionPolicy Bypass',
+        '-NoExit',
+        '-File',
+        "`"$($MyInvocation.MyCommand.Path)`"",
+        "\`"$Loc\`""
+    )
+    Start-Process -FilePath PowerShell.exe -Verb RunAs -ArgumentList $Arguments
     Break
 }
+else
+{
+    Write-Host "Already elevated, exiting in $Delay seconds..."
+    Start-Sleep -Seconds $Delay
+}
+if($Loc.Length -gt 1){
+Set-Location $Loc.Substring(1,$Loc.Length-2)
+}
+
 Write-Host "Kollar om du har PowerShell7"
 if (!(Test-Path .\pwsh\pwsh.exe)) {
     Write-Host "PowerShell saknas, laddar ner (Detta kan ta en stund)"
