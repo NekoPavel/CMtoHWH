@@ -6,8 +6,8 @@
 
 Add-Type -Assembly System.Windows.Forms
 $Form = New-Object Windows.Forms.Form 
-$Form.Width = 400
-$Form.Height = 237
+$Form.Width = 505
+$Form.Height = 325
 $Form.Text = "HittaDator V2.0"
 
 $infoTextLbl = New-Object Windows.Forms.Label
@@ -15,22 +15,26 @@ $datorNamnIn = New-Object System.Windows.Forms.TextBox
 $hittaDatorBtn = New-Object System.Windows.Forms.Button
 $datorInfoUt = New-Object System.Windows.Forms.TextBox
 
-$infoTextLbl.Location = New-Object Drawing.Point(12, 11)
+$infoTextLbl.Location = New-Object Drawing.Point(5, 5)
 $infoTextLbl.Text = "Datornamn/Mac:adress"
 $infoTextLbl.AutoSize = $true
 $infoTextLbl.Visible = $true
 $infoTextLbl.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
+$infoTextLbl.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 15.75, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point, 0)
+$infoTextLbl.Size = New-Object System.Drawing.Size(235, 31)
+$infoTextLbl.TextAlign = [System.Drawing.ContentAlignment]::MiddleLeft
 
-$datorNamnIn.Location = New-Object System.Drawing.Point(140, 9)
+$datorNamnIn.Location = New-Object System.Drawing.Point(240, 5)
 $datorNamnIn.Name = "datorNamnIn"
-$datorNamnIn.Size = New-Object System.Drawing.Size(147, 20)
+$datorNamnIn.Size = New-Object System.Drawing.Size(185, 31)
 $datorNamnIn.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
 $datorNamnIn.BackColor = [System.Drawing.Color]::FromArgb(51,51,51)
 $datorNamnIn.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
+$datorNamnIn.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 15.75, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point, 0)
 
-$hittaDatorBtn.Location = New-Object System.Drawing.Point(292, 9)
+$hittaDatorBtn.Location = New-Object System.Drawing.Point(430, 5)
 $hittaDatorBtn.Name = "hittaDatorBtn"
-$hittaDatorBtn.Size = New-Object System.Drawing.Size(75, 23)
+$hittaDatorBtn.Size = New-Object System.Drawing.Size(55, 31)
 $hittaDatorBtn.TabIndex = 2
 $hittaDatorBtn.Text = "Sök"
 $hittaDatorBtn.UseVisualStyleBackColor = $true
@@ -165,15 +169,17 @@ $hittaDatorBtn.Add_Click($hittaDatorBtn_OnClick)
 $hittaDatorBtn.BackColor = [System.Drawing.Color]::FromArgb(51,51,51)
 $hittaDatorBtn.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
 $hittaDatorBtn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$hittaDatorBtn.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 15.75, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point, 0)
 
-$datorInfoUt.Location = New-Object System.Drawing.Point(15, 38)
+$datorInfoUt.Location = New-Object System.Drawing.Point(5, 41)
 $datorInfoUt.Multiline = $true
 $datorInfoUt.Name = "datorInfoUt"
 $datorInfoUt.ReadOnly = $true
-$datorInfoUt.Size = New-Object System.Drawing.Size(352, 145)
+$datorInfoUt.Size = New-Object System.Drawing.Size(480, 240)
 $datorInfoUt.BackColor = [System.Drawing.Color]::FromArgb(51,51,51)
 $datorInfoUt.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
 $datorInfoUt.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
+$datorInfoUt.Font = New-Object System.Drawing.Font("Microsoft Sans Serif", 15.75, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Point, 0)
 
 $Form.BackColor = [System.Drawing.Color]::FromArgb(29,29,29)
 $Form.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
@@ -182,6 +188,8 @@ $Form.Controls.Add($datorNamnIn)
 $Form.Controls.Add($datorInfoUt)
 $Form.Controls.Add($hittaDatorBtn)
 $Form.Controls.Add($infoTextLbl)
+$Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
+$Form.MaximizeBox = $false
 
 $Form.ShowDialog()
 
