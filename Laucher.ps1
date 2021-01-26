@@ -29,5 +29,4 @@ elseif(!(Get-FileHash .\FindPC.ps1).Hash -eq (Get-FileHash '\\dfs\Gem$\Lit\IT-Se
     Copy-Item -Path '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\FindPC.ps1' -Destination .\FindPC.ps1 -Force
 }
 Write-Host "Startar Scriptet"
-# Launch the (now possibly updated) app
 .\HittaDator.bat

@@ -4,58 +4,35 @@
     Break
 }
 
-function localadmininfo {
-    param($pcName)
+Add-Type -Assembly System.Windows.Forms
+$Form = New-Object Windows.Forms.Form 
+$Form.Width = 400
+$Form.Height = 237
+$Form.Text = "HittaDator V2.0"
 
-    function Find-ADObjects($domain, $class, $filter, $attributes = "distinguishedName") {
-        $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", $domain)
-        $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc)
+$infoTextLbl = New-Object Windows.Forms.Label
+$datorNamnIn = New-Object System.Windows.Forms.TextBox
+$hittaDatorBtn = New-Object System.Windows.Forms.Button
+$datorInfoUt = New-Object System.Windows.Forms.TextBox
 
-        $ds = New-Object System.DirectoryServices.DirectorySearcher
-        $ds.SearchRoot = $dn.GetDirectoryEntry()
-        $ds.SearchScope = "subtree"
-        $ds.PageSize = 1024
-        $ds.Filter = "(&(objectCategory=$class)$filter)"
-        $ds.PropertiesToLoad.AddRange($attributes.Split(","))
-        $result = $ds.FindAll()
-        $ds.Dispose()
-        return $result
-    }
+$infoTextLbl.Location = New-Object Drawing.Point(12, 9)
+$infoTextLbl.Text = "Datornamn/Mac:adress"
+$infoTextLbl.AutoSize = $true
+$infoTextLbl.Visible = $true
 
-    $adminRoles = @("CN=Kar_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Kar,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Sos_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Sos,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Lit_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lit,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Ita_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ita,OU=Reference,DC=gaia,DC=sll,DC=se", "CN=Dan_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Dan,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Hsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Hsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Lsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Fut_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Fut,OU=PublicTransportation,DC=gaia,DC=sll,DC=se", "CN=Int_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Int,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Trf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Trf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Sll_Wrk_LocalAdmin_SLLeKlient,OU=Workstation,OU=Groups,OU=Sll,DC=gaia,DC=sll,DC=se", "CN=Ser_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ser,OU=Administration,DC=gaia,DC=sll,DC=se")
-    $adminRolesRegex = [string]::Join('|', $adminRoles)
-    $adVarde = (Find-ADObjects "gaia" "computer" "(cn=$pcName)" "cn,MemberOf").Properties
-    if ($adVarde.memberof -match $adminRolesRegex) {
-        $true
-    }
-    else {
-        $false
-    }
-}
-function fkarfinder {
-    param($pcName)
+$datorNamnIn.Location = New-Object System.Drawing.Point(138, 9)
+$datorNamnIn.Name = "datorNamnIn"
+$datorNamnIn.Size = New-Object System.Drawing.Size(147, 20)
 
-    function Find-ADObjects($attributes = "distinguishedName") {
-        $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", "gaia");
-        $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc);
-
-        $ds = New-Object System.DirectoryServices.DirectorySearcher;
-        $ds.SearchRoot = $dn.GetDirectoryEntry();
-        $ds.SearchScope = "subtree";
-        $ds.PageSize = 1024;
-        $ds.Filter = "(&(objectCategory=user)(userworkstations=$pcName)(cn=F*))";
-        $ds.PropertiesToLoad.AddRange($attributes.Split(","))
-        $result = $ds.FindAll();
-        $ds.Dispose();
-        return $result;
-    }
-
-    (Find-ADObjects "cn,userworkstations").Properties
-}
-
-while ($true) {
+$hittaDatorBtn.Location = New-Object System.Drawing.Point(292, 9)
+$hittaDatorBtn.Name = "hittaDatorBtn"
+$hittaDatorBtn.Size = New-Object System.Drawing.Size(75, 23)
+$hittaDatorBtn.TabIndex = 2
+$hittaDatorBtn.Text = "Sök"
+$hittaDatorBtn.UseVisualStyleBackColor = $true
+$hittaDatorBtn_OnClick = {
     $continue = $false
-    $pc = Read-Host "Skriv datornamn eller MAC:adress:"
+    $pc = $datorNamnIn.Text
     $pc = ($pc.ToString()).ToLower()
     if ($pc.StartsWith("kar") -and ($pc.length -eq 13)) { $continue = $true }
     elseif ($pc.StartsWith("lit") -and ($pc.length -eq 13)) { $continue = $true }
@@ -75,6 +52,7 @@ while ($true) {
     elseif ($pc.StartsWith("ita") -and ($pc.length -eq 13)) { $continue = $true }
     elseif ($pc.StartsWith("dan") -and ($pc.length -eq 13)) { $continue = $true }
     elseif (!$pc.Contains(":") -and ($pc.length -eq 12 )) {
+
         $pc = $pc.insert(2, ":").insert(5, ":").insert(8, ":").insert(11, ":").insert(14, ":")
         $pc = $pc -replace ":", "%3A"
         $continue = $true
@@ -83,16 +61,15 @@ while ($true) {
         $pc = $pc -replace ":", "%3A"
         $continue = $true
     }
-    else { Write-Host "Fel format på namn, försök igen!" }
+    else { $datorInfoUt.Text = "Fel format på namn, försök igen!" }
             
     if ($continue) {    
         $url = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc + "&take=10&skip=0&type=0&targetActive=1"
         $Responce = Invoke-WebRequest -Uri $url -AllowUnencryptedAuthentication -UseDefaultCredentials -SessionVariable 'Session'
         if (!($Responce.Content | ConvertFrom-Json).result) {
-            Write-Host "Datorn:" $pc "kan inte hittas i Sysman, den är med högst sannolikhet inaktiv."
+            $datorInfoUt.Text = "Datorn: $($pc) kan inte hittas i Sysman, den är med högst sannolikhet inaktiv."
         }
         else {
-            Clear-Host
             $pcName = (($Responce.Content | ConvertFrom-Json).result).name
             $mac = "EJ ANGIVEN"
             $requestBody =
@@ -156,24 +133,81 @@ while ($true) {
 
             $lokaladmin = localadmininfo -pcName $pcName
             if ($localadmin) {
-                $lokaladmin = "JA"
+                $lokaladmin = "Ja"
             }
             else {
-                $lokaladmin = "NEJ"
+                $lokaladmin = "Nej"
             }
-            [PSCustomObject]@{
-                Operativsystem = $os
-                Modell         = $model
-                Roll           = $filteredName
-                Datornamn      = $pcName
-                MAC_Adress     = $mac
-                MAC_med_Kolon  = $macColon
-                Serienummer    = $serial
-                Funktionskonto = $adVarde
-                LokalAdmin     = $lokaladmin
-            }
-            Pause
-            Clear-Host
+            $datorInfoUt.Text = "Operativsystem`t= $($os)`r`nModell`t`t= $($model)`r`nRoll`t`t= $($filteredName)`r`nDatornamn`t= $($pcName)`r`nMAC-adress`t= $($mac)`r`nMAC med kolon`t= $($macColon)`r`nSerienummer`t= $($serial)`r`nFunktionskonto`t= $($adVarde)`r`nLokalAdmin`t= $($lokaladmin)"
+            $datorNamnIn.Clear()
         }
     }
+}
+$hittaDatorBtn.Add_Click($hittaDatorBtn_OnClick)
+
+$datorInfoUt.Location = New-Object System.Drawing.Point(15, 38)
+$datorInfoUt.Multiline = $true
+$datorInfoUt.Name = "datorInfoUt"
+$datorInfoUt.ReadOnly = $true
+$datorInfoUt.Size = New-Object System.Drawing.Size(352, 145)
+
+$Form.AcceptButton = $hittaDatorBtn
+$Form.Controls.Add($datorNamnIn)
+$Form.Controls.Add($datorInfoUt)
+$Form.Controls.Add($hittaDatorBtn)
+$Form.Controls.Add($infoTextLbl)
+
+$Form.ShowDialog()
+
+function localadmininfo {
+    param($pcName)
+
+    function Find-ADObjects($domain, $class, $filter, $attributes = "distinguishedName") {
+        $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", $domain)
+        $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc)
+
+        $ds = New-Object System.DirectoryServices.DirectorySearcher
+        $ds.SearchRoot = $dn.GetDirectoryEntry()
+        $ds.SearchScope = "subtree"
+        $ds.PageSize = 1024
+        $ds.Filter = "(&(objectCategory=$class)$filter)"
+        $ds.PropertiesToLoad.AddRange($attributes.Split(","))
+        $result = $ds.FindAll()
+        $ds.Dispose()
+        return $result
+    }
+
+    $adminRoles = @("CN=Kar_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Kar,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Sos_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Sos,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Lit_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lit,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Ita_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ita,OU=Reference,DC=gaia,DC=sll,DC=se", "CN=Dan_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Dan,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Hsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Hsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Lsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Fut_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Fut,OU=PublicTransportation,DC=gaia,DC=sll,DC=se", "CN=Int_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Int,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Trf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Trf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Sll_Wrk_LocalAdmin_SLLeKlient,OU=Workstation,OU=Groups,OU=Sll,DC=gaia,DC=sll,DC=se", "CN=Ser_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ser,OU=Administration,DC=gaia,DC=sll,DC=se")
+    $adminRolesRegex = [string]::Join('|', $adminRoles)
+    $adVarde = (Find-ADObjects "gaia" "computer" "(cn=$pcName)" "cn,MemberOf").Properties
+    if ($adVarde.memberof -match $adminRolesRegex) {
+        $true
+    }
+    else {
+        $false
+    }
+}
+function fkarfinder {
+    param($pcName)
+
+    function Find-ADObjects($attributes = "distinguishedName") {
+        $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", "gaia");
+        $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc);
+
+        $ds = New-Object System.DirectoryServices.DirectorySearcher;
+        $ds.SearchRoot = $dn.GetDirectoryEntry();
+        $ds.SearchScope = "subtree";
+        $ds.PageSize = 1024;
+        $ds.Filter = "(&(objectCategory=user)(userworkstations=$pcName)(cn=F*))";
+        $ds.PropertiesToLoad.AddRange($attributes.Split(","))
+        $result = $ds.FindAll();
+        $ds.Dispose();
+        return $result;
+    }
+
+    (Find-ADObjects "cn,userworkstations").Properties
+}
+
+function findPc {
+    
 }
