@@ -13,7 +13,7 @@ if (!(Test-Path ./HittaDator.bat)) {
     Write-Host "Filen saknas, laddar ner"
     Copy-Item -Path '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\HittaDator.bat' -Destination .\HittaDator.bat -Force
 }
-elseif(!(Get-FileHash .\HittaDator.bat).Hash -eq (Get-FileHash '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\HittaDator.bat').Hash)
+elseif(!((Get-FileHash .\HittaDator.bat).Hash -eq (Get-FileHash '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\HittaDator.bat').Hash))
 {
     Write-Host "Uppdatering hittad, laddar ner"
     Copy-Item -Path '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\HittaDator.bat' -Destination .\HittaDator.bat -Force
@@ -23,7 +23,7 @@ if (!(Test-Path .\FindPC.ps1)) {
     Write-Host "Scriptet saknas, laddar ner"
     Copy-Item -Path '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\FindPC.ps1' -Destination .\FindPC.ps1 -Force
 }
-elseif(!(Get-FileHash .\FindPC.ps1).Hash -eq (Get-FileHash '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\FindPC.ps1').Hash)
+elseif(!((Get-FileHash .\FindPC.ps1).Hash -eq (Get-FileHash '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\FindPC.ps1').Hash))
 {
     Write-Host "Uppdatering hittad, laddar ner"
     Copy-Item -Path '\\dfs\Gem$\Lit\IT-Service\G55\HittaPC\FindPC.ps1' -Destination .\FindPC.ps1 -Force
