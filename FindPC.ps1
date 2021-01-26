@@ -15,14 +15,18 @@ $datorNamnIn = New-Object System.Windows.Forms.TextBox
 $hittaDatorBtn = New-Object System.Windows.Forms.Button
 $datorInfoUt = New-Object System.Windows.Forms.TextBox
 
-$infoTextLbl.Location = New-Object Drawing.Point(12, 9)
+$infoTextLbl.Location = New-Object Drawing.Point(12, 11)
 $infoTextLbl.Text = "Datornamn/Mac:adress"
 $infoTextLbl.AutoSize = $true
 $infoTextLbl.Visible = $true
+$infoTextLbl.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
 
-$datorNamnIn.Location = New-Object System.Drawing.Point(138, 9)
+$datorNamnIn.Location = New-Object System.Drawing.Point(140, 9)
 $datorNamnIn.Name = "datorNamnIn"
 $datorNamnIn.Size = New-Object System.Drawing.Size(147, 20)
+$datorNamnIn.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
+$datorNamnIn.BackColor = [System.Drawing.Color]::FromArgb(51,51,51)
+$datorNamnIn.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
 
 $hittaDatorBtn.Location = New-Object System.Drawing.Point(292, 9)
 $hittaDatorBtn.Name = "hittaDatorBtn"
@@ -31,6 +35,8 @@ $hittaDatorBtn.TabIndex = 2
 $hittaDatorBtn.Text = "Sök"
 $hittaDatorBtn.UseVisualStyleBackColor = $true
 $hittaDatorBtn_OnClick = {
+    $hittaDatorBtn.Enabled = $false
+    $Form.AcceptButton = $null
     $continue = $false
     $pc = $datorNamnIn.Text
     $pc = ($pc.ToString()).ToLower()
@@ -61,13 +67,22 @@ $hittaDatorBtn_OnClick = {
         $pc = $pc -replace ":", "%3A"
         $continue = $true
     }
-    else { $datorInfoUt.Text = "Fel format på namn, försök igen!" }
+    else { 
+        $datorInfoUt.Text = "Fel format på namn, försök igen!" 
+        $datorInfoUt.ForeColor = [System.Drawing.Color]::FromArgb(238,17,17)
+        $hittaDatorBtn.Enabled = $true
+        $Form.AcceptButton = $hittaDatorBtn
+    }
+    
             
     if ($continue) {    
         $url = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc + "&take=10&skip=0&type=0&targetActive=1"
         $Responce = Invoke-WebRequest -Uri $url -AllowUnencryptedAuthentication -UseDefaultCredentials -SessionVariable 'Session'
         if (!($Responce.Content | ConvertFrom-Json).result) {
             $datorInfoUt.Text = "Datorn: $($pc) kan inte hittas i Sysman, den är med högst sannolikhet inaktiv."
+            $datorInfoUt.ForeColor = [System.Drawing.Color]::FromArgb(238,17,17)
+            $hittaDatorBtn.Enabled = $true
+            $Form.AcceptButton = $hittaDatorBtn
         }
         else {
             $pcName = (($Responce.Content | ConvertFrom-Json).result).name
@@ -139,18 +154,29 @@ $hittaDatorBtn_OnClick = {
                 $lokaladmin = "Nej"
             }
             $datorInfoUt.Text = "Operativsystem`t= $($os)`r`nModell`t`t= $($model)`r`nRoll`t`t= $($filteredName)`r`nDatornamn`t= $($pcName)`r`nMAC-adress`t= $($mac)`r`nMAC med kolon`t= $($macColon)`r`nSerienummer`t= $($serial)`r`nFunktionskonto`t= $($adVarde)`r`nLokalAdmin`t= $($lokaladmin)"
+            $datorInfoUt.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
             $datorNamnIn.Clear()
+            $hittaDatorBtn.Enabled = $true
+            $Form.AcceptButton = $hittaDatorBtn            
         }
     }
 }
 $hittaDatorBtn.Add_Click($hittaDatorBtn_OnClick)
+$hittaDatorBtn.BackColor = [System.Drawing.Color]::FromArgb(51,51,51)
+$hittaDatorBtn.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
+$hittaDatorBtn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
 
 $datorInfoUt.Location = New-Object System.Drawing.Point(15, 38)
 $datorInfoUt.Multiline = $true
 $datorInfoUt.Name = "datorInfoUt"
 $datorInfoUt.ReadOnly = $true
 $datorInfoUt.Size = New-Object System.Drawing.Size(352, 145)
+$datorInfoUt.BackColor = [System.Drawing.Color]::FromArgb(51,51,51)
+$datorInfoUt.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
+$datorInfoUt.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
 
+$Form.BackColor = [System.Drawing.Color]::FromArgb(29,29,29)
+$Form.ForeColor = [System.Drawing.Color]::FromArgb(239,244,255)
 $Form.AcceptButton = $hittaDatorBtn
 $Form.Controls.Add($datorNamnIn)
 $Form.Controls.Add($datorInfoUt)
