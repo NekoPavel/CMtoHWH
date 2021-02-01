@@ -90,12 +90,11 @@ id;hv_typ;hv_kategori
 99;	ZEUS-197B;39
 100; ZEUS-227B;39
 101; ZEUS-247B;39
-102; HP EliteBook 735G6 R5;18
-103; HP EliteBook 735G6 R7;18
+102; HP EliteBook 735 G6;18
 104; HP EliteBook 845 G7;14
-105; ProOne440G6;4
+105; HP ProOne 440 G6 24 All-in-One PC;4
 106; ThinkCenter SFF M725s (Ny);2
-107; ThinkCentre M75s1 SFF;2
+107; ThinkCentre M75s-1;2
 108; HP Prodesk 400 G6 DM;12
 109; HP Prodesk 405 G6 SFF;2
 110; HP Prodesk 600 G6 MT;12
@@ -103,3 +102,18 @@ id;hv_typ;hv_kategori
 112; HP EliteBook 835 G7;18
 113; HP ProBook 640 G8;19
 115; HP Zbook 15 G7;22
+116;HP Zbook 17 G7;24
+117;ThinkCentre M75s1 SFF (Ny CPU);2
+118;HP 440 G6 PO AiO NT i3-10100 8;5
+119;ThinkCentre M75s-2;2
+120;ThinkCentre M70t;12
+121;ThinkStation P340;14 
+122;ThinkCentre M90a;4
+124;ThinkPad X13;18
+126;ThinkPad T14;14
+127;ThinkPad T15p;22
+128;ThinkPad P15v;24
+129;ThinkPad P17;24
+130;ThinkCentre M75q-1;12
+131;ThinkPad L14;19
+132;ThinkCentre M75q-2;2
