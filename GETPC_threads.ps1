@@ -122,12 +122,26 @@ $findPC = {
                     $filteredName = $filteredName.Substring(11)       
                 }
             }
+            if ($filteredName -eq "Kiosk_PC"){
+                foreach($name in $names){
+                    if ($name.StartsWith("Gai_App_CitrixReceiverVardTerminal")){
+                        $filteredName = "Vardterminal"
+                    }
+                }
+            }
             $names = $Responce.installedApplications
             if ($filteredName -eq "Inte hittad") {
                 foreach ($name in $names) {
                     if (($name.Name.StartsWith("Sll_Wrk_Kar_PR") -or $name.Name.StartsWith("Sll_Wrk_Sos_PR") -or $name.Name.StartsWith("Sll_Wrk_Dan_PR") -or ($name.Name.StartsWith("Sll_Wrk_Lit_PR") -or $name.Name.StartsWith("Sll_Wrk_Sll_PR") -or $name.Name.StartsWith("Sll_Wrk_Hsf_PR") -or $name.Name.StartsWith("Sll_Wrk_Lsf_PR") -or $name.Name.StartsWith("Sll_Wrk_Int_PR") -or $name.Name.StartsWith("Sll_Wrk_Fut_PR") -or $name.Name.StartsWith("Sll_Wrk_Pnf_PR") -or $name.Name.StartsWith("Sll_Wrk_Rev_PR") -or $name.Name.StartsWith("Sll_Wrk_Ser_PR") -or $name.Name.StartsWith("Sll_Wrk_Tka_PR") -or $name.Name.StartsWith("Sll_Wrk_Trf_PR") -or $name.Name.StartsWith("Sll_Wrk_Tsl_PR") -or $name.Name.StartsWith("Sll_Wrk_Pnf_PR") -or $name.Name.StartsWith("Sll_Wrk_Ita_PR")))) {
                         $filteredName = $name.Name
                         $filteredName = $filteredName.Substring(15)
+                    }
+                }
+            }
+            if (($filteredName -eq "Kiosk_PC" )-or($filteredName -eq "Inte hittad")){
+                foreach($name in $names){
+                    if ($names.Name -eq "Kar_Rol_Vardterminal-Kiosk"){
+                        $filteredName = "Vardterminal"
                     }
                 }
             }

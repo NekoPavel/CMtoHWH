@@ -177,6 +177,13 @@ $hittaDatorBtn_OnClick = {
                         
                 }
             }
+            if ($filteredName -eq "Kiosk_PC"){
+                foreach($name in $names){
+                    if ($name.StartsWith("Gai_App_CitrixReceiverVardTerminal")){
+                        $filteredName = "Vardterminal"
+                    }
+                }
+            }
             $names = $Responce.installedApplications
             if ($filteredName -eq "Inte hittad") {
                 foreach ($name in $names) {
@@ -186,7 +193,14 @@ $hittaDatorBtn_OnClick = {
                     }
                 }
                 
-            }   
+            }
+            if (($filteredName -eq "Kiosk_PC" )-or($filteredName -eq "Inte hittad")){
+                foreach($name in $names){
+                    if ($names.Name -eq "Kar_Rol_Vardterminal-Kiosk"){
+                        $filteredName = "Vardterminal"
+                    }
+                }
+            }
             if (($filteredName -eq "Administrativ_PC" ) -and ($bit -like "*64*")) {
                 $filteredName = "Administrativ_PC_64bit"
             }
