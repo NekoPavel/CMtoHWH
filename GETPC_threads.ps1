@@ -82,13 +82,23 @@ $findPC = {
                     }
                     if ($model -eq "69") {
                         #Om datorn INTE finns i listan så är det en av de nya
-                        foreach ($aioSerial in $using:aioSerialList) {
+                        foreach ($aioSerial in $using:aioSerialList69) {
                             if (!($aioSerial -eq $serial)) {
                                 $model = "106"
                             }
                         }
-                        #
+                        # M725s
                     }
+                    if ($model -eq "107") {
+                        #Om datorn INTE finns i listan så är det en av de nya
+                        foreach ($aioSerial in $using:aioSerialList107) {
+                            if (!($aioSerial -eq $serial)) {
+                                $model = "117"
+                            }
+                        }
+                        #M75s1
+                    }
+
                 }
             }
             <#
@@ -232,7 +242,8 @@ $stopWatchTotal = [System.Diagnostics.Stopwatch]::StartNew()
 $pc_modelsList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\all_pc_models.csv -Header 'id','hv_typ','hv_category'
 $rolesList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\roles.csv -Header 'id','role'
 $aioList = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_touch_aio.csv -Header 'name'
-$aioSerialList = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M725s.csv -Header 'serial'
+$aioSerialList69 = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M725s.csv -Header 'serial'
+$aioSerialList107 = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M75s1.csv -Header 'serial'
 $pcList = Import-Csv -Delimiter ";" -Path $pathToCsv -Header 'pcName' -Encoding UTF8
 #$running = $false
 
