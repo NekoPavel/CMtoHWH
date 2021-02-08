@@ -77,11 +77,11 @@ id;hv_typ;hv_kategori
 85;ThinkPad P53;22
 86;Lenovo TIO ThinkCenter M715q;4
 87;ThinkPad X395;18
-88;ThinkPad T495;14
-89;ThinkStation P330;4
-90;ThinkCentre TIO M715q Touch (paket);4
+88;ThinkPad T495;43
+89;ThinkStation P330;14
+90;ThinkCentre TIO M715q Touch (paket);6
 91;ThinkCentre TIO M715q (paket);4
-92;ThinkPad X395 Kraftfull;18
+92;ThinkPad X395 Kraftfull;42
 93;ThinkPad P73;24
 94;ThinkCentre TIO 24 (Gen3Touch);4
 95;Thinkcentre M920z;4
@@ -91,7 +91,7 @@ id;hv_typ;hv_kategori
 100; ZEUS-227B;39
 101; ZEUS-247B;39
 102; HP EliteBook 735 G6;18
-104; HP EliteBook 845 G7;14
+104; HP EliteBook 845 G7;43
 105; HP ProOne 440 G6 24 All-in-One PC;4
 106; ThinkCenter SFF M725s (Ny);2
 107; ThinkCentre M75s-1;2
@@ -104,13 +104,13 @@ id;hv_typ;hv_kategori
 115; HP Zbook 15 G7;22
 116;HP Zbook 17 G7;24
 117;ThinkCentre M75s1 SFF (Ny CPU);2
-118;HP 440 G6 PO AiO NT i3-10100 8;5
+118;HP 440 G6 PO AiO NT i3-10100 8;6
 119;ThinkCentre M75s-2;2
 120;ThinkCentre M70t;12
-121;ThinkStation P340;14 
+121;ThinkStation P340;14
 122;ThinkCentre M90a;4
 124;ThinkPad X13;18
-126;ThinkPad T14;14
+126;ThinkPad T14;43
 127;ThinkPad T15p;22
 128;ThinkPad P15v;24
 129;ThinkPad P17;24
