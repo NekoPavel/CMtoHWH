@@ -109,7 +109,9 @@ $findPC = {
             #>
             if ($model -match "\D" -or !$model) {
                 $save = $false
-                #Make this log
+                #TODO Make this log
+                $model | Out-File -FilePath $PSScriptRoot\unmappedModelsLog.txt -Append
+                #This should output to a text file
             }
 
             #OS
