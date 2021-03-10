@@ -41,8 +41,8 @@ function fkarfinder {
         $ds = New-Object System.DirectoryServices.DirectorySearcher;
         $ds.SearchRoot = $dn.GetDirectoryEntry();
         $ds.SearchScope = "subtree";
-        $ds.PageSize = 1024;
-        $ds.Filter = "(&(objectCategory=user)(userworkstations=$pcName)(cn=F*))";
+        $ds.PageSize = 2048;
+        $ds.Filter = "(&(objectCategory=user)(userworkstations=*$pcName*)(cn=F*))";
         $ds.PropertiesToLoad.AddRange($attributes.Split(","))
         $result = $ds.FindAll();
         $ds.Dispose();
