@@ -26,7 +26,6 @@ $findPC = {
     elseif ($pc.StartsWith("pnf") -and ($pc.length -eq 13)) { $continue = $true }
     elseif ($pc.StartsWith("ita") -and ($pc.length -eq 13)) { $continue = $true }
     elseif ($pc.StartsWith("dan") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("pnf") -and ($pc.length -eq 13)) { $continue = $true }
     else {}
     if ($continue) {
         $url = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc + "&take=10&skip=0&type=0&targetActive=1"
