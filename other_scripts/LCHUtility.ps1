@@ -22,7 +22,7 @@ function fkarfinder {
 }
 
 $pathToCsv = Read-Host "Enter full csv file path to go thru (Without quotation marks)"
-$pcList = Import-Csv -Delimiter ";" -Path $pathToCsv -Encoding UTF8 -Header 'OldPCName', 'OldUsername', 'OldSerial', 'NewPCName', 'NewUsername', 'NewSerial'
+$pcList = Import-Csv -Delimiter "," -Path $pathToCsv -Encoding UTF8 -Header 'OldPCName', 'OldUsername', 'OldSerial', 'NewPCName', 'NewUsername', 'NewSerial'
 foreach ($pc in $pcList) {
     $urlNew = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc.NewPCName + "&take=10&skip=0&type=0&targetActive=1"
     $ResponceNew = Invoke-WebRequest -Uri $urlNew -AllowUnencryptedAuthentication -UseDefaultCredentials -SessionVariable 'Session'
@@ -59,16 +59,19 @@ foreach ($pc in $pcList) {
         if ($null -ne $fkonto.cn) { 
             $fkonto = ($fkonto.cn -join ', ')
             Write-Host "Hittat funktionskonto $($fkonto)"
-            $logOnTo = (Get-ADUser -Identity $fkonto -Properties *).userWorkstations + ","+$pc.NewPCName 
-            $fkonto | Set-ADUser -LogonWorkstations $logOnTo
+            if (!((Get-ADUser -Identity $fkonto -Properties *).userWorkstations -like "*$($pc.NewPCName)*")) {
+                $logOnTo = (Get-ADUser -Identity $fkonto -Properties *).userWorkstations + ","+$pc.NewPCName 
+                $fkonto | Set-ADUser -LogonWorkstations $logOnTo
+            }
             $pcIdentity = Get-ADComputer -Identity $pc.NewPCName
             Write-Host "$($fkonto) fungerar nu på : $($logOnTo)"
-            Add-ADGroupMember -Identity "$($pc.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient" -Members $pcIdentity         
+            Add-ADGroupMember -Identity "$($pc.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient" -Members $pcIdentity.ObjectGUID
             Write-Host "Dator tillagd i $($pc.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient"
         }
         else {
             Write-Host "Dator har inte Funktionskonto"
         }
+        
     }
     
 
