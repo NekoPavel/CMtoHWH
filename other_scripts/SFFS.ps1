@@ -129,7 +129,7 @@ $runButton_onClick = {
                 $tempObj = New-Object -TypeName PSObject
                 if ($tempOutput.TryDequeue([ref]$tempObj)) {
                     $tempOutputTextbox = $using:outputTextbox
-                    $tempOutputTextbox.Text = $tempOutputTextbox.Text + $tempObj.Text
+                    $tempOutputTextbox.Text = $tempObj.Text + $tempOutputTextbox.Text
                     $tempProgress = $using:progressBar
                     $tempProgress.Value = $tempProgress.Value + 1
                     Remove-Variable -Name "tempProgress"
@@ -156,6 +156,9 @@ $outputTextbox.ReadOnly = $true
 $outputTextbox.Size = New-Object System.Drawing.Size(866, 220)
 $outputTextbox.TabIndex = 5
 $outputTextbox.Visible = $false
+$outputTextbox.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
+#$outputTextbox.SelectionStart = $outputTextbox.Length
+#$outputTextbox.ScrollToCaret()
 
 $Form.AllowDrop = $true
 $Form.BackColor = [System.Drawing.Color]::FromArgb(29, 29, 29)
@@ -224,7 +227,7 @@ $sffs = {
         } | ConvertTo-Json -Compress
         Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/v2/printer/install" -Body $requestBody -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session -ContentType "application/json"
         #$NewName = $using:pc.NewPCName
-        $tempOut = $tempOut + "Datorn: {0} har fått {1} skrivare från {2}.`t|`t" -f $_.NewPCName, $printers.Count, $_.OldPCName
+        $tempOut = $tempOut + "Datorn: {0} har fått {1} skrivare från {2}.`r`n" -f $_.NewPCName, $printers.Count, $_.OldPCName
 
         $fkonto = fkarfinder -pcName $_.OldPCName
         if ($null -ne $fkonto.cn) { 
@@ -235,7 +238,7 @@ $sffs = {
                 $fkonto | Set-ADUser -LogonWorkstations $logOnTo
             }
             $pcIdentity = Get-ADComputer -Identity $_.NewPCName
-            $tempOut = $tempOut + "$($fkonto) fungerar nu på : $($logOnTo)`t|`t"
+            $tempOut = $tempOut + "$($fkonto) fungerar nu på : $($logOnTo)`r`n"
             Add-ADGroupMember -Identity "$($_.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient" -Members $pcIdentity.ObjectGUID
             $tempOut = $tempOut + "Dator tillagd i $($_.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient`r`n"
         }
