@@ -45,7 +45,7 @@ $progressBar.ForeColor = [System.Drawing.Color]::FromArgb(6, 176, 37)
 $openFileDialog.Filter = "Excel Sheet|*.xlsx"
 $openFileDialog.InitialDirectory = "$($currentUserDirectory)\Downloads"
 
-$pathToIcon = Get-Item '.\other_scripts\icon.png'
+$pathToIcon = Get-Item 'icon.png'
 $openFileIcon = [System.Drawing.Image]::FromFile($pathToIcon)
 $openFileButton.BackgroundImage = $openFileIcon
 $openFileButton.BackgroundImageLayout = [System.Windows.Forms.ImageLayout]::Center
