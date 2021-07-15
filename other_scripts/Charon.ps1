@@ -1,30 +1,98 @@
 Param(
-    [string]$currentUserDirectory
+    [string]$currentUser
 )
-function fkarfinder {
-    param($pcName)
-    function Find-ADObjects($attributes = "distinguishedName") {
-        $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", "gaia");
-        $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc);
-        $ds = New-Object System.DirectoryServices.DirectorySearcher;
-        $ds.SearchRoot = $dn.GetDirectoryEntry();
-        $ds.SearchScope = "subtree";
-        $ds.PageSize = 1024;
-        $ds.Filter = "(&(objectCategory=user)(userworkstations=*$pcName*)(cn=F*))";
-        $ds.PropertiesToLoad.AddRange($attributes.Split(","))
-        $result = $ds.FindAll();
-        $ds.Dispose();
-        return $result;
-    }
-    (Find-ADObjects "cn,userworkstations").Properties
+if ($currentUser -like "*gaisys*") {
+    $currentUserDirectory = "C:\Users\{0}" -f $currentUser
 }
+else {
+    $currentUserDirectory = (Get-ADUser -Identity $currentUser -Properties HomeDirectory | Select-Object HomeDirectory).HomeDirectory
+}
+$currentUserDirectory = $currentUserDirectory + "\Download"
+$sffs = {
+    $tempOut = ""
+    $urlNew = "http://sysman.sll.se/SysMan/api/Client?name=" + $_.NewPCName + "&take=10&skip=0&type=0&targetActive=1"
+    $ResponceNew = Invoke-WebRequest -Uri $urlNew -AllowUnencryptedAuthentication -UseDefaultCredentials -SessionVariable 'Session'
+    $idNew = (($ResponceNew.Content | ConvertFrom-Json).result).id
+    $urlOld = "http://sysman.sll.se/SysMan/api/Client?name=" + $_.OldPCName + "&take=10&skip=0&type=0&targetActive=1"
+    $ResponceOld = Invoke-WebRequest -Uri $urlOld -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session
+    $idOld = (($ResponceOld.Content | ConvertFrom-Json).result).id
+    if (!($ResponceNew.Content | ConvertFrom-Json).result) {
+        $tempOut = $tempOut + "Nya Datorn: $($_.NewPCName) hittas ej.`r`n"
+    }
+    elseif (!($ResponceOld.Content | ConvertFrom-Json).result) {
+        $tempOut = $tempOut + "Gamla Datorn: $($_.OldPCName) hittas ej.`r`n"
+    }
+    else {
+        $urlOld = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $idOld
+        $ResponceOld = Invoke-WebRequest -Uri $urlOld -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session
+        $printers = New-Object -TypeName "System.Collections.ArrayList"
+        foreach ($printerTemp in ($ResponceOld.Content | ConvertFrom-Json).sysManInformation.installedPrinters) {
+            $printer = [PSCustomObject]@{id = $printerTemp.id ; isDefault = $printerTemp.isDefault }
+            $printers += $printer
+        }
+        $idNewList = New-Object -TypeName "System.Collections.ArrayList"
+        $idNewList += [int]$idNew
+        $requestBody = 
+        @{
+            targets          = $idNewList
+            printers         = $printers
+            templateTargetId = $null
+        } | ConvertTo-Json -Compress
+        Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/v2/printer/install" -Body $requestBody -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session -ContentType "application/json"
+        #$NewName = $using:pc.NewPCName
+        $tempOut = $tempOut + "Datorn: {0} har fått {1} skrivare från {2}.`r`n" -f $_.NewPCName, $printers.Count, $_.OldPCName
+        
+        $fkonto = .\fkarfinder.ps1 $_.OldPCName
+        if ($null -ne $fkonto.cn) { 
+            $fkonto = ($fkonto.cn -join ', ')
+            $tempOut = $tempOut + "Hittat funktionskonto $($fkonto)`r`n"
+            Get-ADUser -Identity $fkonto -Properties *
+            if (!((Get-ADUser -Identity $fkonto -Properties *).userWorkstations -like "*$($_.NewPCName)*")) {
+                $logOnTo = (Get-ADUser -Identity $fkonto -Properties *).userWorkstations + "," + $_.NewPCName 
+                $fkonto | Set-ADUser -LogonWorkstations $logOnTo
+                $tempOut = $tempOut + $fkonto + " fungerar nu på : " + $logOnTo + "`r`n"
+            }
+            $pcIdentity = Get-ADComputer -Identity $_.NewPCName
+            $tempOut = $tempOut + $fkonto + $_.NewPCName +" hade redan funktionskontot`r`n"
+            Add-ADGroupMember -Identity "$($_.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient" -Members $pcIdentity.ObjectGUID
+            $tempOut = $tempOut + "Dator tillagd i $($_.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient`r`n"
+        }
+        else {
+            $tempOut = $tempOut + "Dator har inte Funktionskonto`r`n"
+        }
+    }
+    $tempQueue = $using:output
+    $tempQueue.Enqueue(<#$pcObject#>[PSCustomObject]@{
+            Text = $tempOut
+        })
+    Remove-Variable -Name $pc
+    Remove-Variable -Name $tempOut
+    Remove-Variable -Name $tempQueue
+    Remove-Variable -Name $printers
+    Remove-Variable -Name $printerTemp
+    Remove-Variable -Name $pcIdentity
+    Remove-Variable -Name $fkonto
+    Remove-Variable -Name $idNewList
+    Remove-Variable -Name $idNew
+    Remove-Variable -Name $idOld
+    Remove-Variable -Name $requestBody
+    Remove-Variable -Name $ResponceOld
+    Remove-Variable -Name $ResponceNew
+    Remove-Variable -Name $urlOld
+    Remove-Variable -Name $urlNew
+    Remove-Variable -Name $printer
+    Remove-Variable -Name $Session
+    Remove-Variable -Name $logOnTo
+}
+
+
 
 Add-Type -Assembly System.Windows.Forms
 [System.Windows.Forms.Application]::EnableVisualStyles();
 $Form = New-Object Windows.Forms.Form 
 $Form.Width = 900
 $Form.Height = 130
-$Form.Text = "SFFS av D8BP"
+$Form.Text = "Charon av D8BP"
 
 $progressBar = New-Object System.Windows.Forms.ProgressBar
 $openFileDialog = New-Object System.Windows.Forms.OpenFileDialog
@@ -43,7 +111,7 @@ $progressBar.Value = 0
 $progressBar.ForeColor = [System.Drawing.Color]::FromArgb(6, 176, 37)
 
 $openFileDialog.Filter = "Excel Sheet|*.xlsx"
-$openFileDialog.InitialDirectory = "$($currentUserDirectory)\Downloads"
+$openFileDialog.InitialDirectory = $currentUserDirectory
 
 $pathToIcon = Get-Item 'icon.png'
 $openFileIcon = [System.Drawing.Image]::FromFile($pathToIcon)
@@ -90,7 +158,7 @@ $showMoreCheckbox_OnCheckedChanged = {
     if ($showMoreCheckbox.Checked) {
         $Form.Height = 350;
         $outputTextbox.Visible = $true;
-        $showMoreCheckbox.Text = "▲ Visa Mer ▲";
+        $showMoreCheckbox.Text = "▲    Dölj    ▲";
     }
     else {
         $Form.Height = 130;
@@ -120,6 +188,7 @@ $runButton_onClick = {
     }
     $progressBar.Maximum = $pcListLength
     $progressBar.Value = 0
+    $pcList
     $pcJob = $pcList | ForEach-Object -AsJob -ThrottleLimit 10 -Parallel $sffs
     Start-ThreadJob -ScriptBlock {
         $tempPcJob = $using:pcJob
@@ -193,79 +262,3 @@ $Form_OnDragOver = {
 $Form.Add_DragOver($Form_OnDragOver)
 
 $Form.ShowDialog()
-
-$sffs = {
-    #$pc = $_.
-    $tempOut = ""
-    $urlNew = "http://sysman.sll.se/SysMan/api/Client?name=" + $_.NewPCName + "&take=10&skip=0&type=0&targetActive=1"
-    $ResponceNew = Invoke-WebRequest -Uri $urlNew -AllowUnencryptedAuthentication -UseDefaultCredentials -SessionVariable 'Session'
-    $idNew = (($ResponceNew.Content | ConvertFrom-Json).result).id
-    $urlOld = "http://sysman.sll.se/SysMan/api/Client?name=" + $_.OldPCName + "&take=10&skip=0&type=0&targetActive=1"
-    $ResponceOld = Invoke-WebRequest -Uri $urlOld -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session
-    $idOld = (($ResponceOld.Content | ConvertFrom-Json).result).id
-    if (!($ResponceNew.Content | ConvertFrom-Json).result) {
-        $tempOut = $tempOut + "Nya Datorn: $($_.NewPCName) hittas ej.`r`n"
-    }
-    elseif (!($ResponceOld.Content | ConvertFrom-Json).result) {
-        $tempOut = $tempOut + "Gamla Datorn: $($_.OldPCName) hittas ej.`r`n"
-    }
-    else {
-        $urlOld = "http://sysman.sll.se/SysMan/api/Reporting/Client?clientId=" + $idOld
-        $ResponceOld = Invoke-WebRequest -Uri $urlOld -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session
-        $printers = New-Object -TypeName "System.Collections.ArrayList"
-        foreach ($printerTemp in ($ResponceOld.Content | ConvertFrom-Json).sysManInformation.installedPrinters) {
-            $printer = [PSCustomObject]@{id = $printerTemp.id ; isDefault = $printerTemp.isDefault }
-            $printers += $printer
-        }
-        $idNewList = New-Object -TypeName "System.Collections.ArrayList"
-        $idNewList += [int]$idNew
-        $requestBody = 
-        @{
-            targets          = $idNewList
-            printers         = $printers
-            templateTargetId = $null
-        } | ConvertTo-Json -Compress
-        Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/v2/printer/install" -Body $requestBody -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session -ContentType "application/json"
-        #$NewName = $using:pc.NewPCName
-        $tempOut = $tempOut + "Datorn: {0} har fått {1} skrivare från {2}.`r`n" -f $_.NewPCName, $printers.Count, $_.OldPCName
-
-        $fkonto = fkarfinder -pcName $_.OldPCName
-        if ($null -ne $fkonto.cn) { 
-            $fkonto = ($fkonto.cn -join ', ')
-            $tempOut = $tempOut + "Hittat funktionskonto $($fkonto)`r`n"
-            if (!((Get-ADUser -Identity $fkonto -Properties *).userWorkstations -like "*$($_.NewPCName)*")) {
-                $logOnTo = (Get-ADUser -Identity $fkonto -Properties *).userWorkstations + "," + $_.NewPCName 
-                $fkonto | Set-ADUser -LogonWorkstations $logOnTo
-            }
-            $pcIdentity = Get-ADComputer -Identity $_.NewPCName
-            $tempOut = $tempOut + "$($fkonto) fungerar nu på : $($logOnTo)`r`n"
-            Add-ADGroupMember -Identity "$($_.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient" -Members $pcIdentity.ObjectGUID
-            $tempOut = $tempOut + "Dator tillagd i $($_.NewPCName.Substring(0,3))_Wrk_F-kontoWS_SLLeKlient`r`n"
-        }
-        else {
-            $tempOut = $tempOut + "Dator har inte Funktionskonto`r`n"
-        }
-    }
-    $tempQueue = $using:output
-    $tempQueue.Enqueue(<#$pcObject#>[PSCustomObject]@{
-            Text = $tempOut
-        })
-    Remove-Variable -Name $pc
-    Remove-Variable -Name $tempOut
-    Remove-Variable -Name $tempQueue
-    Remove-Variable -Name $printers
-    Remove-Variable -Name $printerTemp
-    Remove-Variable -Name $pcIdentity
-    Remove-Variable -Name $fkonto
-    Remove-Variable -Name $idNewList
-    Remove-Variable -Name $idNew
-    Remove-Variable -Name $idOld
-    Remove-Variable -Name $requestBody
-    Remove-Variable -Name $ResponceOld
-    Remove-Variable -Name $ResponceNew
-    Remove-Variable -Name $urlOld
-    Remove-Variable -Name $urlNew
-    Remove-Variable -Name $printer
-    Remove-Variable -Name $Session
-    Remove-Variable -Name $logOnTo
-}
