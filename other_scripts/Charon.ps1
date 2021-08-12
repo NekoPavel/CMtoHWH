@@ -180,7 +180,7 @@ $runButton.UseVisualStyleBackColor = $false
 $runButton_onClick = {
     $runButton.Enabled = $false
     $output = (New-Object System.Collections.Concurrent.ConcurrentQueue[PSCustomObject])
-    $pathToCsv = '' + $inputTextbox.Text + ''
+    $pathToCsv = $inputTextbox.Text
     $pcList = Import-Excel -Path $pathToCsv -HeaderName 'OldPCName', 'OldUsername', 'OldSerial', 'NewPCName', 'NewUsername', 'NewSerial' -StartRow 3
     $pcListLength = 0
     foreach ($tempObj in $pcList) {
