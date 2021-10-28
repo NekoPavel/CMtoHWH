@@ -52,7 +52,7 @@ foreach ($pc in $pcList) {
             printers         = $printers
             templateTargetId = $null
         } | ConvertTo-Json -Compress
-        $request = Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/v2/printer/install" -Body $requestBody -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session -ContentType "application/json"
+        $null = Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/v2/printer/install" -Body $requestBody -AllowUnencryptedAuthentication -UseDefaultCredentials -WebSession $Session -ContentType "application/json"
         Write-Host "Datorn: $($pc.NewPCName) har fått $($printers.Count) skrivare från $($pc.OldPCName)."
 
         $fkonto = fkarfinder -pcName $pc.OldPCName
