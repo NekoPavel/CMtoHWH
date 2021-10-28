@@ -32,7 +32,6 @@ $findPC = {
         $Responce = Invoke-WebRequest -Uri $url -UseDefaultCredentials -AllowUnencryptedAuthentication -SessionVariable 'Session'
         if (!($Responce.Content | ConvertFrom-Json).result) {}
         elseif (($Responce.Content | ConvertFrom-Json).result) {
-            $save = $true
             $pcName = (($Responce.Content | ConvertFrom-Json).result).Name
             <#$requestBody =
             @{
@@ -61,9 +60,6 @@ $findPC = {
             $Responce = (Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json
             #Serienummer
             [string]$serial = [string]$Responce.serial
-            if ($serial -like "*O.E.M.*") {
-                $save = $false
-            }
 
             #Mer modellsaker
             <#foreach ($pc_model in $using:pc_modelsList) {
@@ -127,6 +123,7 @@ $findPC = {
             }#>
             #Här händer magin för roller
             #$bit = $Responce.processorArchitecture
+            $latestHeartbeat = $Responce.latestHeartbeat
             $names = $Responce.collections
             $filteredName = "Inte hittad"
             foreach ($name in $names) {   
@@ -193,11 +190,12 @@ $findPC = {
                     Modell_G = $model
                     Roll_G = $filteredName
                     Hardvarunamn_G = $pcName
-                    MAC_Adress_G = $mac
-                    MAC_med_Kolon_G = $macColon
+                    #MAC_Adress_G = $mac
+                    #MAC_med_Kolon_G = $macColon
                     Serienummer_G = $serial
                     Funktionskonto_G = $adVarde
                     Lokal_admin_G = $lokaladmin
+                    Senaste_Heartbeat = $latestHeartbeat
                 })
 
             }
