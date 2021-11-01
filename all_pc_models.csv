@@ -86,22 +86,22 @@ id;hv_typ;hv_kategori
 94;ThinkCentre TIO 24 (Gen3Touch);4
 95;Thinkcentre M920z;4
 96;Thinkpad L480;19
-98;Dell Precision 3520 ;24
-99;	ZEUS-197B;39
-100; ZEUS-227B;39
-101; ZEUS-247B;39
-102; HP EliteBook 735 G6;18
-104; HP EliteBook 845 G7;43
-105; HP ProOne 440 G6 24 All-in-One PC;4
-106; ThinkCenter SFF M725s (Ny);2
-107; ThinkCentre M75s-1;2
-108; HP Prodesk 400 G6 DM;12
-109; HP Prodesk 405 G6 SFF;2
-110; HP Prodesk 600 G6 MT;12
-111; HP Z2 G5 SFF;14
-112; HP EliteBook 835 G7;18
-113; HP ProBook 640 G8;19
-115; HP Zbook 15 G7;22
+98;Dell Precision 3520;24
+99;ZEUS-197B;39
+100;ZEUS-227B;39
+101;ZEUS-247B;39
+102;HP EliteBook 735 G6;18
+104;HP EliteBook 845 G7;43
+105;HP ProOne 440 G6 24 All-in-One PC;4
+106;ThinkCenter SFF M725s (Ny);2
+107;ThinkCentre M75s-1;2
+108;HP Prodesk 400 G6 DM;12
+109;HP Prodesk 405 G6 SFF;2
+110;HP Prodesk 600 G6 MT;12
+111;HP Z2 G5 SFF;14
+112;HP EliteBook 835 G7;18
+113;HP ProBook 640 G8;19
+115;HP Zbook 15 G7;22
 116;HP Zbook 17 G7;24
 117;ThinkCentre M75s1 SFF (Ny CPU);2
 118;HP 440 G6 PO AiO NT i3-10100 8;6
