@@ -15,25 +15,7 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
         $id = (($Responce.Content | ConvertFrom-Json).result).Id
         #Modell
         $model = ((($Responce.Content | ConvertFrom-Json).result).hardwareModel).Name
-        <#$requestBody =
-            @{
-                UserName = ""
-                ComputerName = $pcName.ToString()
-                Id = "88eeae01-fc85-426c-898d-dae73ec31867"
-            } | ConvertTo-Json -Compress
-            $macResponce = Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/Tool/Run" -Body $requestBody -WebSession $Session -ContentType "application/json" -AllowUnencryptedAuthentication
-            $macResponce = ($macResponce | ConvertFrom-Json).result
-            #MAC
-            foreach ($result in $macResponce) {
-                if ((($result -like "*Ethernet*") -and !($result -like "*#2*") -and !($result -like "*Virtual*") -and !($result -like "*Server Adapter*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*") -and !($result -like "*#2*") -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
-                    [string]$macColon = [string]$result.Substring(0,17)
-                    [string]$mac = [string]([string]$macColon -replace ":","")
-                }
-            }
-            if (!$mac -or !$macColon) {
-                $save = $false
-            }
-            #>
+        
         $request = "http://sysman.sll.se/SysMan/api/client?id=" + $id + "&name=" + $pcName + "&assetTag=" + $pcName
         $Responce = ((Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json)
         #NEW MAC
@@ -102,10 +84,10 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
         }
         #OS
         if ($Responce.operatingSystem -like "*7*") {
-            $os = "W7"   
+            $os = "W7"
         }
         elseif ($Responce.operatingSystem -like "*10*") {
-            $os = "W10"  
+            $os = "W10"
         }
         else {
             $save = $false
