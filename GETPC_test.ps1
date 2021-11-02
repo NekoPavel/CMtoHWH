@@ -4,13 +4,12 @@ $aioList = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_touch_aio.csv -Head
 $aioSerialList69 = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M725s.csv -Header 'serial'
 $aioSerialList107 = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M75s1.csv -Header 'serial'
 
-$pc = "KARDS54337658"
+$pc = "KARLS85080989"
 if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
     $url = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc + "&take=1&skip=0&type=0"
     $Responce = Invoke-WebRequest -Uri $url -UseDefaultCredentials -AllowUnencryptedAuthentication -SessionVariable 'Session'
     #if (!($Responce.Content | ConvertFrom-Json).result) {}
     <#else#>if (($Responce.Content | ConvertFrom-Json).result) {
-        $save = $true
         $pcName = (($Responce.Content | ConvertFrom-Json).result).Name
         $id = (($Responce.Content | ConvertFrom-Json).result).Id
         #Modell
@@ -30,10 +29,7 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
         if (-not ($serial.Length -gt 0)) {
             [string]$serial = [string]$Responce.serial
         }
-            
-        if ($serial -like "*O.E.M.*" -or $serial.Length -lt 1) {
-            $save = $false
-        }
+
         #Mer modellsaker
         foreach ($pc_model in $pc_modelsList) {
             if ($pc_model.hv_typ -ieq $model) {
@@ -77,7 +73,6 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
             }
             #>
         if ($model -match "\D" -or !$model) {
-            $save = $false
             #TODO Make this log
             $model | Out-File -FilePath $PSScriptRoot\unmappedModelsLog.txt -Append
             #This should output to a text file
@@ -90,7 +85,6 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
             $os = "W10"
         }
         else {
-            $save = $false
         }
         #Här händer magin för roller
         $bit = $Responce.processorArchitecture
@@ -128,7 +122,6 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
             $filteredName = "2"
         }
         if ($filteredName -eq "Inte hittad") {
-            $save = $false
         }
         #Funktionskonto
         $adVarde = &$PSScriptRoot\fkarfinder.ps1 $pcName
