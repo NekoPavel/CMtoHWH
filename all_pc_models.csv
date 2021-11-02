@@ -119,24 +119,28 @@ id;hv_typ;hv_kategori
 129;ThinkPad P17 Gen 1;24
 130;ThinkCentre M75q-1;12
 131;ThinkPad L14;19
-132;ThinkCentre M75q-2;2
-133;ThinkCentre M75q-1;2
+999;WACK;999
+132;ThinkCentre M75q-2;7
+133;ThinkCentre M75q-1;7
 134;ThinkCentre M75q-1 (paket);2
-135;ThinkCentre M75q-1 Touch (paket);15
-136;ThinkCentre M75q-1 Touch (dator);15
-137;ThinkCentre M75q-2;2
+135;ThinkCentre M75q-1 Touch (paket);6
+136;ThinkCentre M75q-1 Touch (dator);6
+137;ThinkCentre M75q-2;7
 138;ThinkCentre M75q-2 (paket);2
-139;ThinkCentre M75q-2 Touch (paket);15
-140;ThinkCentre M75q-2 Touch (dator);15
+139;ThinkCentre M75q-2 Touch (paket);6
+140;ThinkCentre M75q-2 Touch (dator);6
+999;WACK;999
 141;ThinkPad P51 ???;16
 142;ThinkPad P53 ???;16
-143;HP Zbook 15 G7;16
-144;ThinkPad T15p;16
-145;ThinkStation P340 STANDARD;4
-146;ThinkPad T14 G2;14
-147;ThinkPad X13 G2 (utan 4G);5
+143;HP Zbook 15 G7 ???;16
+144;ThinkPad T15p ???;16
+999;WACK;999
+145;ThinkStation P340 STANDARD;14
+999;WACK;999
+146;ThinkPad T14 G2;43
+147;ThinkPad X13 G2 (utan 4G);18
 148;ThinkCentre M90a AIO;2
-149;ThinkPad X13 G1 REV2;5
-150;ThinkPad T14 G1 REV3;14
-151;ThinkPad P15v GEN1 (S0V800);8
-152;ThinkPad P15v GEN1 (S1EY00);8
+149;ThinkPad X13 G1 REV2;18
+150;ThinkPad T14 G1 REV3;43
+151;ThinkPad P15v GEN1 (S0V800);24
+152;ThinkPad P15v GEN1 (S1EY00);24
