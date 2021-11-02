@@ -123,7 +123,8 @@ $findPC = {
             if ($model -match "\D" -or !$model) {
                 $save = $false
                 #TODO Make this log
-                $ModelsQueue.Enqueue($model)
+                $tempModelQueue = $using:ModelsQueue
+                $tempModelQueue.Enqueue($model)
                 
                 #This should output to a text file
             }
@@ -239,6 +240,7 @@ $findPC = {
             Remove-Variable -Name "result"
             Remove-Variable -Name "url"
             Remove-Variable -Name "continue"
+            Remove-Variable -Name "tempModelQueue"
         } 
     } 
 }
@@ -268,9 +270,9 @@ while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 
         Remove-Variable -Name "tempObj"
     }
     if ($ModelsQueue.Count -gt 0) {
-        $tempModel = New-Object -TypeName String
+        $tempModel = ""
         if ($ModelsQueue.TryDequeue([ref]$tempModel)) {
-            $tempModel | Out-File -FilePath $PSScriptRoot\unmappedModelsLog.txt -Append
+            $tempModel | Out-File -FilePath ($PSScriptRoot+"\unmappedModelsLog.txt") -Append
         }
         Remove-Variable -Name "tempModel"
     }
