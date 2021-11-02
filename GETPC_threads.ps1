@@ -7,6 +7,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 #$excludedModels = @("Virtual Machine","VMware Virtual Platform","Parallels Virtual Platform","OEM")
 #$excludedModelsRegex = [string]::Join('|',$excludedModels)
 $PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[PSCustomObject])
+$ModelsQueue = (New-Object System.Collections.Concurrent.ConcurrentQueue[String])
 $findPC = {
     $pc = $_.pcName
     #$continue = $false
@@ -122,7 +123,8 @@ $findPC = {
             if ($model -match "\D" -or !$model) {
                 $save = $false
                 #TODO Make this log
-                $model | Out-File -FilePath $PSScriptRoot\unmappedModelsLog.txt -Append
+                $ModelsQueue.Enqueue($model)
+                
                 #This should output to a text file
             }
 
@@ -257,13 +259,20 @@ $pcList = Import-Csv -Delimiter ";" -Path $pathToCsv -Header 'pcName' -Encoding 
 
 
 $job = $pcList | ForEach-Object -AsJob -ThrottleLimit 48 -Parallel $findPC 
-while ($job.State -eq "Running" -or $PCObjects.Count -gt 0) {
+while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 0) {
     if ($PcObjects.Count -gt 0) {
         $tempObj = New-Object -TypeName PSObject
         if ($PcObjects.TryDequeue([ref]$tempObj)) {
             $tempObj | Export-Csv -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8
         }
         Remove-Variable -Name "tempObj"
+    }
+    if ($ModelsQueue.Count -gt 0) {
+        $tempModel = New-Object -TypeName String
+        if ($ModelsQueue.TryDequeue([ref]$tempModel)) {
+            $tempModel | Out-File -FilePath $PSScriptRoot\unmappedModelsLog.txt -Append
+        }
+        Remove-Variable -Name "tempModel"
     }
 }
 #Export-Csv -InputObject $job -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8 | Wait-Job -Any | Receive-Job
