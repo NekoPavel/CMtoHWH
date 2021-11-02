@@ -4,6 +4,42 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     Start-Process powershell -Verb runAs -ArgumentList $arguments
     break
 }
+function Find-ADObjects($domain, $class, $filter, $attributes = "distinguishedName") {
+    $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", $domain);
+    $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc);
+    
+    $ds = New-Object System.DirectoryServices.DirectorySearcher;
+    $ds.SearchRoot = $dn.GetDirectoryEntry();
+    $ds.SearchScope = "subtree";
+    $ds.PageSize = 1024;
+    $ds.Filter = "(&(objectCategory=$class)$filter)";
+    $ds.PropertiesToLoad.AddRange($attributes.Split(","))
+    $result = $ds.FindAll();
+    $ds.Dispose();
+    return $result;
+}
+function GetLocalAdmin {
+    param (
+        [string]$computerName
+    )
+    $adminRoles = @("CN=Pnf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Pnf,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Kar_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Kar,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Sos_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Sos,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Lit_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lit,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Ita_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ita,OU=Reference,DC=gaia,DC=sll,DC=se", "CN=Dan_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Dan,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Hsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Hsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Lsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Fut_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Fut,OU=PublicTransportation,DC=gaia,DC=sll,DC=se", "CN=Int_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Int,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Trf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Trf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Sll_Wrk_LocalAdmin_SLLeKlient,OU=Workstation,OU=Groups,OU=Sll,DC=gaia,DC=sll,DC=se", "CN=Ser_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ser,OU=Administration,DC=gaia,DC=sll,DC=se")
+    $adminRolesRegex = [string]::Join('|', $adminRoles)
+    $adVarde = (Find-ADObjects "gaia" "computer" "(cn=$computerName)" "cn,MemberOf").Properties
+    if ($adVarde.memberof -match $adminRolesRegex) {
+        $true
+    }
+    else {
+        $false
+    }
+}
+function FindFunkAccount {
+    param (
+        [string]$computerName
+    )
+    (Find-ADObjects "gaia" "user" "(userworkstations=*$computerName*)(cn=F*)" "cn,userworkstations").Properties
+}
+
+
 #$excludedModels = @("Virtual Machine","VMware Virtual Platform","Parallels Virtual Platform","OEM")
 #$excludedModelsRegex = [string]::Join('|',$excludedModels)
 $PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[PSCustomObject])
@@ -172,16 +208,16 @@ $findPC = {
             if (($filteredName -eq "1") -and ($bit -like "*64*")) {
                 $filteredName = "2"
             }
-            if ($filteredName -ieq "Inte hittad") {
+            if ($filteredName -ieq "Inte hittad" -or $filename.Length -gt 1) {
                 $save = $false
             }
             #Funktionskonto
-            $adVarde = &$PSScriptRoot\fkarfinder.ps1 $pcName
+            $adVarde = FindFunkAccount($pcName)
             if ($null -ne $adVarde.cn) { $adVarde = ($adVarde.cn -join ', ') }
             else {
                 $adVarde = "NEJ"
             }
-            $lokaladmin = &$PSScriptRoot\localadmin.ps1 $pcName
+            $lokaladmin = GetLocalAdmin($pcName)
             if ($lokaladmin) {
                 $lokaladmin = "JA"
             }
@@ -272,7 +308,7 @@ while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 
     if ($ModelsQueue.Count -gt 0) {
         $tempModel = ""
         if ($ModelsQueue.TryDequeue([ref]$tempModel)) {
-            $tempModel | Out-File -FilePath ($PSScriptRoot+"\unmappedModelsLog.txt") -Append
+            $tempModel | Out-File -FilePath ($PSScriptRoot + "\unmappedModelsLog.txt") -Append
         }
         Remove-Variable -Name "tempModel"
     }
