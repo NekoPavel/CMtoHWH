@@ -4,41 +4,6 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     Start-Process powershell -Verb runAs -ArgumentList $arguments
     break
 }
-function Find-ADObjects($domain, $class, $filter, $attributes = "distinguishedName") {
-    $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", $domain);
-    $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc);
-    
-    $ds = New-Object System.DirectoryServices.DirectorySearcher;
-    $ds.SearchRoot = $dn.GetDirectoryEntry();
-    $ds.SearchScope = "subtree";
-    $ds.PageSize = 1024;
-    $ds.Filter = "(&(objectCategory=$class)$filter)";
-    $ds.PropertiesToLoad.AddRange($attributes.Split(","))
-    $result = $ds.FindAll();
-    $ds.Dispose();
-    return $result;
-}
-function GetLocalAdmin {
-    param (
-        [string]$computerName
-    )
-    $adminRoles = @("CN=Pnf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Pnf,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Kar_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Kar,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Sos_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Sos,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Lit_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lit,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Ita_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ita,OU=Reference,DC=gaia,DC=sll,DC=se", "CN=Dan_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Dan,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Hsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Hsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Lsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Fut_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Fut,OU=PublicTransportation,DC=gaia,DC=sll,DC=se", "CN=Int_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Int,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Trf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Trf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Sll_Wrk_LocalAdmin_SLLeKlient,OU=Workstation,OU=Groups,OU=Sll,DC=gaia,DC=sll,DC=se", "CN=Ser_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ser,OU=Administration,DC=gaia,DC=sll,DC=se")
-    $adminRolesRegex = [string]::Join('|', $adminRoles)
-    $adVarde = (Find-ADObjects "gaia" "computer" "(cn=$computerName)" "cn,MemberOf").Properties
-    if ($adVarde.memberof -match $adminRolesRegex) {
-        $true
-    }
-    else {
-        $false
-    }
-}
-function FindFunkAccount {
-    param (
-        [string]$computerName
-    )
-    (Find-ADObjects "gaia" "user" "(userworkstations=*$computerName*)(cn=F*)" "cn,userworkstations").Properties
-}
-
 
 #$excludedModels = @("Virtual Machine","VMware Virtual Platform","Parallels Virtual Platform","OEM")
 #$excludedModelsRegex = [string]::Join('|',$excludedModels)
@@ -46,55 +11,42 @@ $PCObjects = (New-Object System.Collections.Concurrent.ConcurrentQueue[PSCustomO
 $ModelsQueue = (New-Object System.Collections.Concurrent.ConcurrentQueue[String])
 $findPC = {
     $pc = $_.pcName
-    #$continue = $false
-    <#
-    if ($pc.StartsWith("kar") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("lit") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("sos") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("hsf") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("lsf") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("int") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("fut") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("rev") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("ser") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("sll") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("tka") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("trf") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("tsl") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("pnf") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("ita") -and ($pc.length -eq 13)) { $continue = $true }
-    elseif ($pc.StartsWith("dan") -and ($pc.length -eq 13)) { $continue = $true }
-    else {}
-    #>
     if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
         $url = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc + "&take=1&skip=0&type=0"
         $Responce = Invoke-WebRequest -Uri $url -UseDefaultCredentials -AllowUnencryptedAuthentication -SessionVariable 'Session'
         #if (!($Responce.Content | ConvertFrom-Json).result) {}
-        <#else#>if (($Responce.Content | ConvertFrom-Json).result) {
+        <#else#>
+        if (($Responce.Content | ConvertFrom-Json).result) {
             $save = $true
             $pcName = (($Responce.Content | ConvertFrom-Json).result).Name
+
+            $fkarJob = Start-ThreadJob -InputObject $pcName -ScriptBlock {
+                $adVarde = (.\AdFind.exe -h gaia -f "(&(objectCategory=user)(userworkstations=*$input*)(cn=F*))" cn userworkstations -nodn -incllike cn)
+                if ($adVarde[$advarde.Length-1].Substring(0,1) -ne "0") {
+                    $adVarde = ($adVarde[$advarde.Length-3]).Substring(5,8)
+                }
+                else {
+                    $adVarde = "NEJ"
+                }
+                Write-Output $adVarde
+                Remove-Variable -Name "adVarde"
+            }
+
+            $adminJob = Start-ThreadJob -InputObject $pcName -ScriptBlock {
+                $lokaladmin = ([regex]::match((.\AdFind.exe -h gaia -f "(cn=$input)" cn MemberOf -nodn -incllike MemberOf),"_Wrk_LocalAdmin_SLLeKlient")).Success
+                if ($lokaladmin) {
+                    $lokaladmin = "JA"
+                }
+                else {
+                    $lokaladmin = "NEJ"
+                }
+                Write-Output $lokaladmin
+                Remove-Variable -Name "lokaladmin"
+            }
             $id = (($Responce.Content | ConvertFrom-Json).result).Id
             #Modell
-            $model = ((($Responce.Content | ConvertFrom-Json).result).hardwareModel).Name
-            <#$requestBody =
-            @{
-                UserName = ""
-                ComputerName = $pcName.ToString()
-                Id = "88eeae01-fc85-426c-898d-dae73ec31867"
-            } | ConvertTo-Json -Compress
-            $macResponce = Invoke-WebRequest -Method Post -Uri "http://sysman.sll.se/SysMan/api/Tool/Run" -Body $requestBody -WebSession $Session -ContentType "application/json" -AllowUnencryptedAuthentication
-            $macResponce = ($macResponce | ConvertFrom-Json).result
-            #MAC
-            foreach ($result in $macResponce) {
-                if ((($result -like "*Ethernet*") -and !($result -like "*#2*") -and !($result -like "*Virtual*") -and !($result -like "*Server Adapter*") -and !($result -like "*Dock*")) -or (($result -like "*GbE*") -and !($result -like "*#2*") -and !($result -like "*USB*")) -or $result -like "*Gigabit*") {
-                    [string]$macColon = [string]$result.Substring(0,17)
-                    [string]$mac = [string]([string]$macColon -replace ":","")
-                }
-            }
-            if (!$mac -or !$macColon) {
-                $save = $false
-            }
-            #>
+            $model = ((($Responce.Content | ConvertFrom-Json).result).hardwareModel).name
+
             $request = "http://sysman.sll.se/SysMan/api/client?id=" + $id + "&name=" + $pcName + "&assetTag=" + $pcName
             $Responce = ((Invoke-WebRequest -Uri $request -AllowUnencryptedAuthentication -WebSession $Session).Content | ConvertFrom-Json)
             #NEW MAC
@@ -158,9 +110,9 @@ $findPC = {
             #>
             if ($model -match "\D" -or !$model) {
                 $save = $false
-                #TODO Make this log
-                $tempModelQueue = $using:ModelsQueue
-                $tempModelQueue.Enqueue($model)
+                
+                #$tempModelQueue = $using:ModelsQueue
+                #$tempModelQueue.Enqueue($model)
                 
                 #This should output to a text file
             }
@@ -212,34 +164,13 @@ $findPC = {
                 $save = $false
             }
             #Funktionskonto
-            $adVarde = FindFunkAccount($pcName)
-            if ($null -ne $adVarde.cn) { $adVarde = ($adVarde.cn -join ', ') }
-            else {
-                $adVarde = "NEJ"
-            }
-            $lokaladmin = GetLocalAdmin($pcName)
-            if ($lokaladmin) {
-                $lokaladmin = "JA"
-            }
-            else {
-                $lokaladmin = "NEJ"
-            }
+            $fkontoResult = Receive-Job -Job $fkarJob -Wait -AutoRemoveJob
+            $lokaladmin = Receive-Job -Job $adminJob -Wait -AutoRemoveJob
+            
+            
             if ($save) {
-                <#
-                $pcObject = New-Object -TypeName PSObject 
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvara_G -Value $hardware
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Operativsystem_G -Value $os
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Modell_G -Value $model
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Roll_G -Value $filteredName
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Hardvarunamn_G -Value $pcName
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_Adress_G -Value $mac
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name MAC_med_Kolon_G -Value $macColon
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Serienummer_G -Value $serial
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Funktionskonto_G -Value $adVarde
-                Add-Member -InputObject $pcObject -MemberType NoteProperty -Name Lokal_admin_G -Value $lokaladmin
-                #>
                 $tempQueue = $using:PCObjects
-                $tempQueue.Enqueue(<#$pcObject#>[PSCustomObject]@{
+                $tempQueue.Enqueue([PSCustomObject]@{
                         Hardvara_G       = $hardware
                         Operativsystem_G = $os
                         Modell_G         = $model
@@ -248,13 +179,17 @@ $findPC = {
                         MAC_Adress_G     = $mac
                         MAC_med_Kolon_G  = $macColon
                         Serienummer_G    = $serial
-                        Funktionskonto_G = $adVarde
+                        Funktionskonto_G = $fkontoResult
                         Lokal_admin_G    = $lokaladmin
                     })
-
+            }
+            else {
+                $tempQueue = $using:PCObjects
+                $tempQueue.Enqueue([PSCustomObject]@{
+                        Hardvara_G = "filler"
+                    })
             }
             Remove-Variable -Name "save"
-            Remove-Variable -Name "PCObject"
             Remove-Variable -Name "hardware"
             Remove-Variable -Name "tempQueue"
             Remove-Variable -Name "os"
@@ -264,7 +199,6 @@ $findPC = {
             Remove-Variable -Name "mac"
             Remove-Variable -Name "macColon"
             Remove-Variable -Name "serial"
-            Remove-Variable -Name "adVarde"
             Remove-Variable -Name "lokaladmin"
             Remove-Variable -Name "bit"
             Remove-Variable -Name "pc_role"
@@ -272,13 +206,21 @@ $findPC = {
             Remove-Variable -Name "id"
             Remove-Variable -Name "request"
             Remove-Variable -Name "pc_model"
-            Remove-Variable -Name "requestbody"
-            Remove-Variable -Name "result"
             Remove-Variable -Name "url"
             Remove-Variable -Name "continue"
             Remove-Variable -Name "tempModelQueue"
+            Remove-Variable -Name "adminJob"
+            Remove-Variable -Name "fkarJob"
+            Remove-Variable -Name "fkontoResult"
+            
         } 
-    } 
+    }
+    else {
+        $tempQueue = $using:PCObjects
+        $tempQueue.Enqueue([PSCustomObject]@{
+                Hardvara_G = "filler"
+            })
+    }
 }
 #$pathToCsv = Read-Host "Enter full csv file path to go thru (Without quotation marks)"
 #$filename = Read-Host "FILNAMN?"
@@ -295,13 +237,31 @@ $pcList = Import-Csv -Delimiter ";" -Path $pathToCsv -Header 'pcName' -Encoding 
 
 #Write-Host "List import" $stopWatchOuter.Elapsed.TotalMilliseconds
 
-
-$job = $pcList | ForEach-Object -AsJob -ThrottleLimit 48 -Parallel $findPC 
+$totalCount = $pcList.Length
+$currentStep = 0
+Write-Host "$totalCount rader ska köras"
+$stopWatchTotal = [System.Diagnostics.Stopwatch]::StartNew()
+$job = $pcList | ForEach-Object -AsJob -ThrottleLimit 6 -Parallel $findPC  
 while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 0) {
     if ($PcObjects.Count -gt 0) {
         $tempObj = New-Object -TypeName PSObject
         if ($PcObjects.TryDequeue([ref]$tempObj)) {
-            $tempObj | Export-Csv -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8
+            if ($tempObj.Hardvara_G -ne "filler") {
+                $tempObj | Export-Csv -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8
+            }
+            $currentStep++
+            Clear-Host
+            Write-Host "Steg $currentStep av $totalCount"
+            $perc=($currentStep/$totalCount)*100
+            Write-Host "$perc% färdigt"
+            $timeOne = $stopWatchTotal.Elapsed.TotalMinutes/$currentStep
+            $secondsOne = $timeOne * 60
+            $timeLeft = ($timeOne*$totalCount)-$stopWatchTotal.Elapsed.TotalMinutes
+            Write-Host "Ungefär $timeLeft minuter kvar ($secondsOne sekunder/dator)"
+            Remove-Variable -Name "perc"
+            Remove-Variable -Name "timeLeft"
+            Remove-Variable -Name "timeOne"
+            Remove-Variable -Name "secondsOne"
         }
         Remove-Variable -Name "tempObj"
     }

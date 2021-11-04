@@ -1,16 +1,68 @@
-$pc_modelsList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\all_pc_models.csv -Header 'id','hv_typ','hv_category'
-$rolesList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\roles.csv -Header 'id','role'
+$pc_modelsList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\all_pc_models.csv -Header 'id', 'hv_typ', 'hv_category'
+$rolesList = Import-Csv -Delimiter ";" -Path $PSScriptRoot\roles.csv -Header 'id', 'role'
 $aioList = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_touch_aio.csv -Header 'name'
 $aioSerialList69 = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M725s.csv -Header 'serial'
 $aioSerialList107 = Import-Csv -Delimiter "," -Path $PSScriptRoot\all_old_M75s1.csv -Header 'serial'
 
-$pc = "KARLS85080989"
+$pc = "KARDS98449028"
 if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
     $url = "http://sysman.sll.se/SysMan/api/Client?name=" + $pc + "&take=1&skip=0&type=0"
     $Responce = Invoke-WebRequest -Uri $url -UseDefaultCredentials -AllowUnencryptedAuthentication -SessionVariable 'Session'
     #if (!($Responce.Content | ConvertFrom-Json).result) {}
-    <#else#>if (($Responce.Content | ConvertFrom-Json).result) {
+    <#else#>
+    if (($Responce.Content | ConvertFrom-Json).result) {
+
         $pcName = (($Responce.Content | ConvertFrom-Json).result).Name
+
+        $fkarJob = Start-Job -ScriptBlock { 
+            <#function Find-ADObjects($domain, $class, $filter, $attributes = "distinguishedName") {
+                $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", $domain);
+                $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc);
+                
+                $ds = New-Object System.DirectoryServices.DirectorySearcher;
+                $ds.SearchRoot = $dn.GetDirectoryEntry();
+                $ds.SearchScope = "subtree";
+                $ds.PageSize = 1024;
+                $ds.Filter = "(&(objectCategory=$class)$filter)";
+                $ds.PropertiesToLoad.AddRange($attributes.Split(","))
+                $result = $ds.FindAll();
+                $ds.Dispose();
+                return $result;
+            }
+            (Find-ADObjects "gaia" "user" "(userworkstations=*$pcName*)(cn=F*)" "cn,userworkstations").Properties
+            #>
+            (dsquery * -filter '(&(objectCategory=user)(userworkstations=*KARDS98449028*)(cn=F*))' -attr cn userworkstations).Properties
+        }
+
+        $adminJob = Start-Job -ScriptBlock {
+            function Find-ADObjects($domain, $class, $filter, $attributes = "distinguishedName") {
+                $dc = New-Object System.DirectoryServices.ActiveDirectory.DirectoryContext ([System.DirectoryServices.ActiveDirectory.DirectoryContextType]"domain", $domain);
+                $dn = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain($dc);
+                
+                $ds = New-Object System.DirectoryServices.DirectorySearcher;
+                $ds.SearchRoot = $dn.GetDirectoryEntry();
+                $ds.SearchScope = "subtree";
+                $ds.PageSize = 1024;
+                $ds.Filter = "(&(objectCategory=$class)$filter)";
+                $ds.PropertiesToLoad.AddRange($attributes.Split(","))
+                $result = $ds.FindAll();
+                $ds.Dispose();
+                return $result;
+            }
+            $adminRoles = @("CN=Pnf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Pnf,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Kar_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Kar,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Sos_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Sos,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Lit_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lit,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Ita_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ita,OU=Reference,DC=gaia,DC=sll,DC=se", "CN=Dan_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Dan,OU=HealthCare,DC=gaia,DC=sll,DC=se", "CN=Hsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Hsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Lsf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Lsf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Fut_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Fut,OU=PublicTransportation,DC=gaia,DC=sll,DC=se", "CN=Int_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Int,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Trf_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Trf,OU=Administration,DC=gaia,DC=sll,DC=se", "CN=Sll_Wrk_LocalAdmin_SLLeKlient,OU=Workstation,OU=Groups,OU=Sll,DC=gaia,DC=sll,DC=se", "CN=Ser_Wrk_LocalAdmin_SLLeKlient,OU=eApplication,OU=Groups,OU=Ser,OU=Administration,DC=gaia,DC=sll,DC=se")
+            $adminRolesRegex = [string]::Join('|', $adminRoles)
+            $adVarde = (Find-ADObjects "gaia" "computer" "(cn=$pcName)" "cn,MemberOf").Properties
+            if ($adVarde.memberof -match $adminRolesRegex) {
+                $true
+            }
+            else {
+                $false
+            }
+            Remove-Variable -Name "adminRoles"
+            Remove-Variable -Name "adminRolesRegex"
+            Remove-Variable -Name "adVarde"
+        }
+
         $id = (($Responce.Content | ConvertFrom-Json).result).Id
         #Modell
         $model = ((($Responce.Content | ConvertFrom-Json).result).hardwareModel).Name
@@ -92,13 +144,13 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
 
         $filteredName = "Inte hittad"
 
-        $tempName = ($Responce.collections | Where-Object {$_ -match "[A-Z][a-z]{2}_Wrk_PR"})
+        $tempName = ($Responce.collections | Where-Object { $_ -match "[A-Z][a-z]{2}_Wrk_PR" })
         if ($tempName) {
-            $filteredName=$tempName.Substring(11)
+            $filteredName = $tempName.Substring(11)
         }
 
 
-        $tempName = ($Responce.installedApplications | Where-Object {$_.Name -match "Sll_Wrk_[A-Z][a-z]{2}_PR"})
+        $tempName = ($Responce.installedApplications | Where-Object { $_.Name -match "Sll_Wrk_[A-Z][a-z]{2}_PR" })
         if ($tempName) {
             $filteredName = $tempName.Name.Substring(15)
         }
@@ -124,12 +176,12 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
         if ($filteredName -eq "Inte hittad") {
         }
         #Funktionskonto
-        $adVarde = &$PSScriptRoot\fkarfinder.ps1 $pcName
-        if ($null -ne $adVarde.cn) { $adVarde = ($adVarde.cn -join ', ') }
+        $fkontoResult = Receive-Job -Job $fkarJob -Wait
+        if ($null -ne $fkontoResult.cn) { $fkontoResult = ($fkontoResult.cn -join ', ') }
         else {
-            $adVarde = "NEJ"
+            $fkontoResult = "NEJ"
         }
-        $lokaladmin = &$PSScriptRoot\localadmin.ps1 $pcName
+        $lokaladmin = Receive-Job -Job $adminJob -Wait
         if ($lokaladmin) {
             $lokaladmin = "JA"
         }
@@ -148,6 +200,25 @@ if ($pc -imatch "^[KLSHIFRTPD][AIOSNUELKRT][RTSFVLAN]((LS)|(DS))\d{8}") {
             Write-Host $adVarde
             Write-Host $lokaladmin
 
+            Remove-Variable -Name "hardware"
+            Remove-Variable -Name "os"
+            Remove-Variable -Name "model"
+            Remove-Variable -Name "filteredName"
+            Remove-Variable -Name "pcName"
+            Remove-Variable -Name "mac"
+            Remove-Variable -Name "macColon"
+            Remove-Variable -Name "serial"
+            Remove-Variable -Name "lokaladmin"
+            Remove-Variable -Name "bit"
+            Remove-Variable -Name "pc_role"
+            Remove-Variable -Name "Responce"
+            Remove-Variable -Name "id"
+            Remove-Variable -Name "request"
+            Remove-Variable -Name "pc_model"
+            Remove-Variable -Name "url"
+            Remove-Variable -Name "adminJob"
+            Remove-Variable -Name "fkarJob"
+            Remove-Variable -Name "fkontoResult"
         }
     } 
 } 
