@@ -112,9 +112,8 @@ $findPC = {
                 $save = $false
                 
                 #$tempModelQueue = $using:ModelsQueue
-                #$tempModelQueue.Enqueue($model)
+                #$tempModelQueue.Enqueue("$model : $pcName")
                 
-                #This should output to a text file
             }
 
             #OS
@@ -163,7 +162,7 @@ $findPC = {
             if ($filteredName -ieq "Inte hittad" -or $filename.Length -gt 1) {
                 $save = $false
             }
-            #Funktionskonto
+            #Funktionskonto och lokaladmin
             $fkontoResult = Receive-Job -Job $fkarJob -Wait -AutoRemoveJob
             $lokaladmin = Receive-Job -Job $adminJob -Wait -AutoRemoveJob
             
@@ -237,11 +236,11 @@ $pcList = Import-Csv -Delimiter ";" -Path $pathToCsv -Header 'pcName' -Encoding 
 
 #Write-Host "List import" $stopWatchOuter.Elapsed.TotalMilliseconds
 
-$totalCount = $pcList.Length
-$currentStep = 0
-Write-Host "$totalCount rader ska köras"
+#$totalCount = $pcList.Length
+#$currentStep = 0
+#Write-Host "$totalCount rader ska köras"
 $stopWatchTotal = [System.Diagnostics.Stopwatch]::StartNew()
-$job = $pcList | ForEach-Object -AsJob -ThrottleLimit 6 -Parallel $findPC  
+$job = $pcList | ForEach-Object -AsJob -ThrottleLimit 8 -Parallel $findPC  
 while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 0) {
     if ($PcObjects.Count -gt 0) {
         $tempObj = New-Object -TypeName PSObject
@@ -249,6 +248,7 @@ while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 
             if ($tempObj.Hardvara_G -ne "filler") {
                 $tempObj | Export-Csv -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8
             }
+            <#
             $currentStep++
             Clear-Host
             Write-Host "Steg $currentStep av $totalCount"
@@ -256,12 +256,15 @@ while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 
             Write-Host "$perc% färdigt"
             $timeOne = $stopWatchTotal.Elapsed.TotalMinutes/$currentStep
             $secondsOne = $timeOne * 60
+            $computersSecond = [math]::round(1.0/$secondsOne)
             $timeLeft = ($timeOne*$totalCount)-$stopWatchTotal.Elapsed.TotalMinutes
-            Write-Host "Ungefär $timeLeft minuter kvar ($secondsOne sekunder/dator)"
+            Write-Host "Ungefär $timeLeft minuter kvar ($secondsOne sekunder/dator) ($computersSecond datorer/sekund)"
             Remove-Variable -Name "perc"
             Remove-Variable -Name "timeLeft"
             Remove-Variable -Name "timeOne"
             Remove-Variable -Name "secondsOne"
+            Remove-Variable -Name "computersSecond"
+            #>
         }
         Remove-Variable -Name "tempObj"
     }
@@ -273,12 +276,6 @@ while ($job.State -eq "Running" -or $PCObjects.Count -gt 0 -or $ModelsQueue -gt 
         Remove-Variable -Name "tempModel"
     }
 }
-#Export-Csv -InputObject $job -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8 | Wait-Job -Any | Receive-Job
-#$stopWatchOuter.Restart()
-#foreach ($object in $PCObjects.ToArray()) { $object | Export-Csv -Path ($PSScriptRoot + "\" + $filename + ".csv") -NoTypeInformation -Append -Force -Delimiter ";" -Encoding UTF8 }
-#Write-Host "File saving:" $stopWatchOuter.Elapsed.TotalMilliseconds
+
 Write-Host "Total:" $stopWatchTotal.Elapsed.TotalMinutes "minuter"
 Write-Host "Done"
-#Get-Job | Stop-Job
-#Get-Job | Remove-Job
-#  C:\Users\gaisysd8bp\Desktop\NewScript\test.csv
