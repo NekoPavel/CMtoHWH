@@ -71,6 +71,7 @@ id;hv_typ;hv_kategori
 76;ThinkPad A485;19
 77;ThinkPad L490;19
 78;ThinkPad P51;22
+78;ThinkPad P51 W10DG;22
 79;ThinkPad P52;22
 80;ThinkPad P72;24
 81;ThinkPad W541;24
@@ -126,7 +127,7 @@ id;hv_typ;hv_kategori
 135;ThinkCentre M75q-1 Touch (paket);6
 136;ThinkCentre M75q-1 Touch (dator);6
 137;ThinkCentre M75q-2;7
-138;ThinkCentre M75q-2 (paket);2
+138;ThinkCentre M75q Gen 2;2
 139;ThinkCentre M75q-2 Touch (paket);6
 140;ThinkCentre M75q-2 Touch (dator);6
 999;WACK;999
@@ -138,7 +139,7 @@ id;hv_typ;hv_kategori
 145;ThinkStation P340 STANDARD;14
 999;WACK;999
 146;ThinkPad T14 G2;43
-147;ThinkPad X13 G2 (utan 4G);18
+147;ThinkPad X13 Gen 2i;18
 148;ThinkCentre M90a AIO;2
 149;ThinkPad X13 G1 REV2;18
 150;ThinkPad T14 G1 REV3;43
