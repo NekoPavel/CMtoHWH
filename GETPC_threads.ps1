@@ -130,36 +130,36 @@ $findPC = {
             $bit = $Responce.processorArchitecture
             
             
-            $filteredName = "Inte hittad"
+            $role = "Inte hittad"
 
-            $tempName = ($Responce.collections | Where-Object { $_ -match "[A-Z][a-z]{2}_Wrk_PR" })
-            if ($tempName) {
-                $filteredName = $tempName.Substring(11)
+            $tempRole = ($Responce.collections | Where-Object { $_ -match "[A-Z][a-z]{2}_Wrk_PR" })
+            if ($tempRole) {
+                $role = $tempRole.Substring(11)
             }
 
 
-            $tempName = ($Responce.installedApplications | Where-Object { $_.Name -match "Sll_Wrk_[A-Z][a-z]{2}_PR" })
-            if ($tempName) {
-                $filteredName = $tempName.Name.Substring(15)
+            $tempRole = ($Responce.installedApplications | Where-Object { $_.Name -match "Sll_Wrk_[A-Z][a-z]{2}_PR" })
+            if ($tempRole) {
+                $role = $tempRole.Name.Substring(15)
             }
             
-            if (($filteredName -eq "Kiosk_PC" ) -or ($filteredName -eq "Inte hittad")) {
+            if (($role -eq "Kiosk_PC" ) -or ($role -eq "Inte hittad")) {
                 if (($Responce.installedApplications | Where-Object { $_.Name -eq "Kar_Rol_Vardterminal-Kiosk" })) {
-                    $filteredName = "Vardterminal"
+                    $role = "Vardterminal"
                 }
                 elseif ($Responce.collections -match "Gai_App_CitrixReceiverVardTerminal") {
-                    $filteredName = "Vardterminal"
+                    $role = "Vardterminal"
                 }
             }
             foreach ($pc_role in $using:rolesList) {
-                if ($pc_role.role -ieq $filteredName) {
-                    $filteredName = $pc_role.Id
+                if ($pc_role.role -ieq $role) {
+                    $role = $pc_role.Id
                 }
             }
-            if (($filteredName -eq "1") -and ($bit -like "*64*")) {
-                $filteredName = "2"
+            if (($role -eq "1") -and ($bit -like "*64*")) {
+                $role = "2"
             }
-            if ($filteredName -ieq "Inte hittad" -or $filename.Length -gt 1) {
+            if ($role -ieq "Inte hittad" -or $role.Length -gt 2 -or $role -gt 11) {
                 $save = $false
             }
             #Funktionskonto och lokaladmin
@@ -173,7 +173,7 @@ $findPC = {
                         Hardvara_G       = $hardware
                         Operativsystem_G = $os
                         Modell_G         = $model
-                        Roll_G           = $filteredName
+                        Roll_G           = $role
                         Hardvarunamn_G   = $pcName
                         MAC_Adress_G     = $mac
                         MAC_med_Kolon_G  = $macColon
@@ -193,7 +193,7 @@ $findPC = {
             Remove-Variable -Name "tempQueue"
             Remove-Variable -Name "os"
             Remove-Variable -Name "model"
-            Remove-Variable -Name "filteredName"
+            Remove-Variable -Name "role"
             Remove-Variable -Name "pcName"
             Remove-Variable -Name "mac"
             Remove-Variable -Name "macColon"
